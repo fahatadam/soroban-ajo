@@ -119,4 +119,3 @@ export function safeParse<T>(schema: ZodSchema<T>, data: unknown):
     | { success: true; data: T }
     | { success: false; error: ZodError }
 }
-}
