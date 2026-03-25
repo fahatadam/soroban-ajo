@@ -8,6 +8,8 @@ import {
 } from '../types/wallet';
 import { getStellarNetworkFromFreighter, waitForFreighterApi } from '../utils/freighter';
 
+export type WalletConnectionState = 'idle' | 'connecting' | 'success' | 'error';
+
 const STORAGE_KEY = 'soroban_ajo_wallet';
 
 const initialState: WalletState = {
@@ -22,6 +24,7 @@ export const useWallet = () => {
     const [walletState, setWalletState] = useState<WalletState>(initialState);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<WalletError | null>(null);
+    const [connectionState, setConnectionState] = useState<WalletConnectionState>('idle');
 
     // Check if wallets are installed
     const detectWallets = useCallback((): WalletInfo[] => {
@@ -231,6 +234,7 @@ export const useWallet = () => {
         async ({ walletType, network = 'testnet' }: ConnectWalletParams): Promise<WalletConnectionResult> => {
             setIsLoading(true);
             setError(null);
+            setConnectionState('connecting');
 
             let result: WalletConnectionResult;
 
@@ -252,6 +256,9 @@ export const useWallet = () => {
 
             if (!result.success && result.error) {
                 setError(result.error);
+                setConnectionState('error');
+            } else {
+                setConnectionState('success');
             }
 
             setIsLoading(false);
@@ -264,6 +271,7 @@ export const useWallet = () => {
     const disconnect = useCallback(() => {
         setWalletState(initialState);
         setError(null);
+        setConnectionState('idle');
         localStorage.removeItem(STORAGE_KEY);
     }, []);
 
@@ -275,6 +283,7 @@ export const useWallet = () => {
         walletState,
         isLoading,
         error,
+        connectionState,
         availableWallets,
 
         // Actions
