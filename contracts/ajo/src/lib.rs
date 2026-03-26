@@ -30,3 +30,4 @@ pub use types::{GroupState, RefundReason, RefundRequest, RefundRecord, RefundVot
 pub use types::{PayoutOrderingStrategy, PayoutVote, PayoutOrder};
 pub use types::{ReminderType, MemberNotificationPreferences, ReminderRecord};
 pub use types::{GroupMilestone, MemberAchievement, MilestoneRecord, AchievementRecord, MemberStats};
+pub use types::{TokenConfig, MultiTokenConfig, TokenContribution};

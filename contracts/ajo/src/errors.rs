@@ -146,6 +146,17 @@ pub enum AjoError {
     /// No eligible members remain for payout selection (all have been paid).
     NoEligibleMembers = 47,
 
+    // ── Multi-token errors ────────────────────────────────────────────────
+
+    /// The token is not in the group's accepted token list.
+    TokenNotAccepted = 48,
+
+    /// Invalid multi-token configuration (empty list, duplicates, zero weight,
+    /// or too many tokens).
+    InvalidMultiTokenConfig = 49,
+
+    /// Group does not have multi-token configuration.
+    NotMultiTokenGroup = 50,
     /// No notification preferences found for this member.
     PreferencesNotFound = 48,
 }

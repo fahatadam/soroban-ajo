@@ -201,38 +201,43 @@ pub fn emit_achievement_earned(
     env.events().publish(topics, (member, achievement));
 }
 
-/// Emit an event when an insurance claim is filed.`
-pub fn emit_claim_filed(env: &Env, claim_id: u64, group_id: u64, cycle: u32) {
-    let topics = (symbol_short!("clmfiled"), group_id, cycle);
-    env.events().publish(topics, claim_id);
-}
- 
-/// Emit an event when automated claim verification produces a result.
-pub fn emit_claim_verification_result(
+// ── Multi-token events ────────────────────────────────────────────────────
+
+/// Emit an event when a multi-token group is created
+pub fn emit_multi_token_group_created(
     env: &Env,
-    claim_id: u64,
     group_id: u64,
-    eligible: bool,
-    is_valid: bool,
+    creator: &Address,
+    contribution_amount: i128,
+    token_count: u32,
 ) {
-    let topics = (symbol_short!("clmverif"), group_id);
-    env.events().publish(topics, (claim_id, eligible, is_valid));
+    let topics = (symbol_short!("mtcreat"), group_id);
+    env.events()
+        .publish(topics, (creator, contribution_amount, token_count));
 }
- 
-/// Emit an event when a claim is approved and a payout is issued.
-pub fn emit_claim_approved(
+
+/// Emit an event when a member contributes with a specific token
+pub fn emit_token_contribution(
     env: &Env,
-    claim_id: u64,
     group_id: u64,
-    claimant: &Address,
+    member: &Address,
+    token: &Address,
     amount: i128,
+    cycle: u32,
 ) {
-    let topics = (symbol_short!("clmapprv"), group_id);
-    env.events().publish(topics, (claim_id, claimant, amount));
+    let topics = (symbol_short!("tkcontr"), group_id, cycle);
+    env.events().publish(topics, (member, token, amount));
 }
- 
-/// Emit an event when a claim is rejected (defaulter was found to have contributed).
-pub fn emit_claim_rejected(env: &Env, claim_id: u64, group_id: u64) {
-    let topics = (symbol_short!("clmrejct"), group_id);
-    env.events().publish(topics, claim_id);
+
+/// Emit an event when a multi-token payout is executed for one token
+pub fn emit_multi_token_payout(
+    env: &Env,
+    group_id: u64,
+    recipient: &Address,
+    token: &Address,
+    amount: i128,
+    cycle: u32,
+) {
+    let topics = (symbol_short!("mtpay"), group_id, cycle);
+    env.events().publish(topics, (recipient, token, amount));
 }

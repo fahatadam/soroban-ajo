@@ -178,6 +178,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "access_type"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "contribution_amount"
                       },
                       "val": {
@@ -831,6 +839,14 @@
             ],
             "data": {
               "map": [
+                {
+                  "key": {
+                    "symbol": "access_type"
+                  },
+                  "val": {
+                    "u32": 0
+                  }
+                },
                 {
                   "key": {
                     "symbol": "contribution_amount"

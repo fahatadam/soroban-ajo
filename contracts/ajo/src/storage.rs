@@ -757,3 +757,104 @@ pub fn get_member_stats(env: &Env, member: &Address) -> Option<crate::types::Mem
     let key = (symbol_short!("MSTATS"), member);
     env.storage().persistent().get(&key)
 }
+
+// ── Group access control storage ──────────────────────────────────────────
+
+/// Stores an invitation for a member to join a group.
+pub fn store_invitation(
+    env: &Env,
+    group_id: u64,
+    invitee: &Address,
+    invitation: &crate::types::GroupInvitation,
+) {
+    let key = (symbol_short!("INVITE"), group_id, invitee);
+    env.storage().persistent().set(&key, invitation);
+}
+
+/// Retrieves an invitation for a member to join a group.
+pub fn get_invitation(
+    env: &Env,
+    group_id: u64,
+    invitee: &Address,
+) -> Option<crate::types::GroupInvitation> {
+    let key = (symbol_short!("INVITE"), group_id, invitee);
+    env.storage().persistent().get(&key)
+}
+
+// ── Multi-token storage ───────────────────────────────────────────────────
+
+/// Stores the multi-token configuration for a group.
+pub fn store_multi_token_config(
+    env: &Env,
+    group_id: u64,
+    config: &crate::types::MultiTokenConfig,
+) {
+    let key = (symbol_short!("MTCONF"), group_id);
+    env.storage().persistent().set(&key, config);
+}
+
+/// Retrieves the multi-token configuration for a group.
+///
+/// Returns `None` for single-token groups (those created via `create_group`).
+pub fn get_multi_token_config(
+    env: &Env,
+    group_id: u64,
+) -> Option<crate::types::MultiTokenConfig> {
+    let key = (symbol_short!("MTCONF"), group_id);
+    env.storage().persistent().get(&key)
+}
+
+/// Returns `true` if a group has multi-token configuration.
+pub fn is_multi_token_group(env: &Env, group_id: u64) -> bool {
+    let key = (symbol_short!("MTCONF"), group_id);
+    env.storage().persistent().has(&key)
+}
+
+/// Stores a token-specific contribution record for a member in a cycle.
+pub fn store_token_contribution(
+    env: &Env,
+    group_id: u64,
+    cycle: u32,
+    member: &Address,
+    record: &crate::types::TokenContribution,
+) {
+    let key = (symbol_short!("TKCONT"), group_id, cycle, member);
+    env.storage().persistent().set(&key, record);
+}
+
+/// Retrieves the token-specific contribution record for a member in a cycle.
+pub fn get_token_contribution(
+    env: &Env,
+    group_id: u64,
+    cycle: u32,
+    member: &Address,
+) -> Option<crate::types::TokenContribution> {
+    let key = (symbol_short!("TKCONT"), group_id, cycle, member);
+    env.storage().persistent().get(&key)
+}
+
+/// Tracks per-token balance accumulated in a group for a given cycle.
+///
+/// This is used during payout to know how much of each token is available.
+pub fn add_group_token_balance(
+    env: &Env,
+    group_id: u64,
+    cycle: u32,
+    token: &Address,
+    amount: i128,
+) {
+    let key = (symbol_short!("GTBAL"), group_id, cycle, token);
+    let current: i128 = env.storage().persistent().get(&key).unwrap_or(0);
+    env.storage().persistent().set(&key, &(current + amount));
+}
+
+/// Retrieves the accumulated token balance for a group in a given cycle.
+pub fn get_group_token_balance(
+    env: &Env,
+    group_id: u64,
+    cycle: u32,
+    token: &Address,
+) -> i128 {
+    let key = (symbol_short!("GTBAL"), group_id, cycle, token);
+    env.storage().persistent().get(&key).unwrap_or(0)
+}

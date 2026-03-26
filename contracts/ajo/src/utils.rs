@@ -431,3 +431,82 @@ pub fn default_member_stats(env: &Env, member: &Address) -> crate::types::Member
         achievements: Vec::new(env),
     }
 }
+
+// ── Multi-token helpers ───────────────────────────────────────────────────
+
+/// Validates an accepted-token list for multi-token group creation.
+///
+/// Checks:
+/// 1. List is non-empty
+/// 2. List does not exceed [`MAX_ACCEPTED_TOKENS`]
+/// 3. Every weight is > 0
+/// 4. No duplicate token addresses
+pub fn validate_token_list(
+    _env: &Env,
+    tokens: &Vec<crate::types::TokenConfig>,
+) -> Result<(), AjoError> {
+    use crate::types::MAX_ACCEPTED_TOKENS;
+
+    if tokens.is_empty() {
+        return Err(AjoError::InvalidMultiTokenConfig);
+    }
+    if tokens.len() > MAX_ACCEPTED_TOKENS {
+        return Err(AjoError::InvalidMultiTokenConfig);
+    }
+
+    // Validate weights and check for duplicates with an O(n²) scan.
+    // Acceptable because MAX_ACCEPTED_TOKENS is small (10).
+    let len = tokens.len();
+    for i in 0..len {
+        let tc = tokens.get(i).unwrap();
+        if tc.weight == 0 {
+            return Err(AjoError::InvalidMultiTokenConfig);
+        }
+        for j in (i + 1)..len {
+            let other = tokens.get(j).unwrap();
+            if tc.address == other.address {
+                return Err(AjoError::InvalidMultiTokenConfig);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Locates a token in the multi-token config and returns its config plus the
+/// primary token's weight (needed for equivalence calculation).
+///
+/// # Returns
+/// `(matched_token_config, primary_weight)`
+///
+/// # Errors
+/// * `TokenNotAccepted` – the address is not in the accepted list
+pub fn find_token_config(
+    config: &crate::types::MultiTokenConfig,
+    token_address: &Address,
+) -> Result<(crate::types::TokenConfig, u32), AjoError> {
+    let primary_weight = config.accepted_tokens.get(0).unwrap().weight;
+
+    for i in 0..config.accepted_tokens.len() {
+        let tc = config.accepted_tokens.get(i).unwrap();
+        if tc.address == *token_address {
+            return Ok((tc, primary_weight));
+        }
+    }
+
+    Err(AjoError::TokenNotAccepted)
+}
+
+/// Calculates the equivalent contribution amount in a secondary token.
+///
+/// Formula: `base_amount × primary_weight / token_weight`
+///
+/// If the member contributes in the primary token (`token_weight ==
+/// primary_weight`) the result equals `base_amount` exactly.
+pub fn calculate_equivalent_amount(
+    base_amount: i128,
+    primary_weight: u32,
+    token_weight: u32,
+) -> i128 {
+    (base_amount * (primary_weight as i128)) / (token_weight as i128)
+}

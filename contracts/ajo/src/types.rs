@@ -142,6 +142,10 @@ pub struct Group {
     /// Strategy used to determine payout order each cycle.
     /// Defaults to `Sequential` (join order) when created via `create_group`.
     pub payout_strategy: PayoutOrderingStrategy,
+
+    /// Access control type for the group.
+    /// Defaults to `Open` when created via `create_group`.
+    pub access_type: GroupAccessType,
 }
 
 /// Comprehensive snapshot of a group's current state.
@@ -503,3 +507,94 @@ pub struct MemberStats {
     pub total_amount_contributed: i128,
     pub achievements: Vec<MemberAchievement>,
 }
+
+// ── Group access control ──────────────────────────────────────────────────
+
+/// Controls how new members can join a group.
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[repr(u32)]
+pub enum GroupAccessType {
+    /// Anyone can join directly.
+    Open = 0,
+    /// Members must be invited by the creator.
+    InviteOnly = 1,
+    /// Members must request access and be approved by the creator.
+    ApprovalRequired = 2,
+}
+
+/// An invitation for a member to join an invite-only group.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GroupInvitation {
+    pub group_id: u64,
+    pub invitee: Address,
+    pub invited_by: Address,
+    pub created_at: u64,
+    pub expires_at: u64,
+    pub accepted: bool,
+}
+
+/// A request from a member to join an approval-required group.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct JoinRequest {
+    pub group_id: u64,
+    pub requester: Address,
+    pub created_at: u64,
+    pub approved: bool,
+}
+
+// ── Multi-token support ───────────────────────────────────────────────────
+
+/// Configuration for an accepted token within a multi-token group.
+///
+/// The `weight` field establishes relative value between tokens.  For example,
+/// if USDC has weight 100 and XLM has weight 10, one USDC unit is treated as
+/// equivalent to 10 XLM units when calculating contribution equivalence.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TokenConfig {
+    /// Address of the token contract (SAC).
+    pub address: Address,
+    /// Relative weight used for equivalence calculations.
+    /// Higher weight means each unit of this token satisfies more of the
+    /// base contribution requirement.  Must be > 0.
+    pub weight: u32,
+}
+
+/// Stored per group to track which tokens are accepted and their weights.
+///
+/// For single-token groups created via `create_group`, this record is **not**
+/// stored — those groups continue to use the `Group.token_address` field
+/// directly, preserving full backward compatibility.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MultiTokenConfig {
+    /// The group this configuration belongs to.
+    pub group_id: u64,
+    /// Ordered list of accepted tokens with their weights.
+    /// The first entry is considered the *primary* token and its weight is
+    /// the baseline for equivalence calculations.
+    pub accepted_tokens: Vec<TokenConfig>,
+}
+
+/// Records a member's token-specific contribution for a cycle.
+///
+/// This is stored alongside the normal contribution flag so existing
+/// contribution queries remain unaffected.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TokenContribution {
+    /// The contributing member's address.
+    pub member: Address,
+    /// The token used for this contribution.
+    pub token: Address,
+    /// The raw amount transferred (in the token's native units).
+    pub amount: i128,
+    /// The cycle this contribution belongs to.
+    pub cycle: u32,
+}
+
+/// Maximum number of distinct tokens a multi-token group can accept.
+pub const MAX_ACCEPTED_TOKENS: u32 = 10;
