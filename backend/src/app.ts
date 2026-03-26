@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
+import { createServer } from 'http'
 import { errorHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
 import { groupsRouter } from './routes/groups'
@@ -20,10 +21,17 @@ import { kycRouter } from './routes/kyc'
 import { disputesRouter } from './routes/disputes'
 import rewardsRouter from './routes/rewards'
 import referralsRouter from './routes/referrals'
+import { chatRouter } from './routes/chat'
+import { chatService } from './services/chatService'
+import { logger } from './utils/logger'
 
 dotenv.config()
 
 const app = express()
+const server = createServer(app)
+
+// Initialize Socket.IO with chat service
+chatService.init(server)
 
 // Middleware
 app.use(helmet())
@@ -59,6 +67,7 @@ app.use('/api/kyc', kycRouter)
 app.use('/api/disputes', disputesRouter)
 app.use('/api/rewards', rewardsRouter)
 app.use('/api/referrals', referralsRouter)
+app.use('/api/chat', createUserLimiter(), chatRouter)
 
 // 404 handler
 app.use((req, res) => {
@@ -71,4 +80,24 @@ app.use((req, res) => {
 // Error handling
 app.use(errorHandler)
 
+// Start server
+const PORT = process.env.PORT || 3001
+server.listen(PORT, () => {
+  logger.info(`Server started on port ${PORT}`, { env: process.env.NODE_ENV || 'development' })
+  logger.info('Socket.IO chat service initialized')
+})
+
+// Graceful shutdown
+const shutdown = async () => {
+  logger.info('Shutting down gracefully...')
+  server.close(() => {
+    logger.info('HTTP server closed')
+    process.exit(0)
+  })
+}
+
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
+
+export { app, server }
 export default app

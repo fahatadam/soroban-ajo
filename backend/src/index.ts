@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
+import { createServer } from 'http'
 import { errorHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
 import { logger } from './utils/logger'
@@ -15,12 +16,20 @@ import { apiLimiter, strictLimiter } from './middleware/rateLimiter'
 // Import queue and job modules
 import { initializeQueues } from './queues'
 import { startJobProcessors } from './jobs'
+// Import chat service
+import { chatService } from './services/chatService'
 
 dotenv.config()
 
 const app = express()
 initSentry(app)
 const PORT = process.env.PORT || 3001
+
+// Create HTTP server
+const server = createServer(app)
+
+// Initialize Socket.IO with chat service
+chatService.init(server)
 
 // Middleware
 app.use(helmet())

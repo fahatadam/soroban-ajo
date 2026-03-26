@@ -1,0 +1,2 @@
+# Please check the README.md of the Prisma migration for more information.
+provider = "postgresql"
