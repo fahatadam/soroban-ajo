@@ -5,14 +5,18 @@ import toast from 'react-hot-toast'
 import { useTheme } from '@/context/ThemeContext'
 import { useOnboarding } from '@/hooks/useOnboarding'
 import type { UserPreferences } from '@/types/profile'
+import { defaultEmailPreferences } from '@/types/profile'
+import { EmailNotificationPreferences } from '@/components/EmailNotificationPreferences'
 
 interface SettingsPanelProps {
   preferences: UserPreferences
   onSave: (preferences: Partial<UserPreferences>) => Promise<void>
   isLoading?: boolean
+  /** User's verified email address, passed through to EmailNotificationPreferences */
+  email?: string
 }
 
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ preferences, onSave, isLoading = false }) => {
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({ preferences, onSave, isLoading = false, email }) => {
   const { setTheme } = useTheme()
   const { replayTutorial } = useOnboarding()
   const [activeTab, setActiveTab] = useState<'notifications' | 'privacy' | 'display'>('notifications')
@@ -110,16 +114,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ preferences, onSav
       <div className="p-8">
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* General channel toggles */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Notification Preferences</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Notification Channels</h3>
               <div className="space-y-4">
-                <ToggleItem
-                  label="Email Notifications"
-                  description="Receive updates via email"
-                  checked={localPreferences.notifications.email}
-                  onChange={() => handleToggle('notifications', 'email')}
-                />
                 <ToggleItem
                   label="Push Notifications"
                   description="Receive browser push notifications"
@@ -145,6 +144,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ preferences, onSav
                   onChange={() => handleToggle('notifications', 'contributionReminders')}
                 />
               </div>
+            </div>
+
+            {/* Granular email preferences */}
+            <div className="pt-6 border-t border-gray-200 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-1">Email Notifications</h3>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
+                Choose which events trigger an email and how often to receive them.
+              </p>
+              <EmailNotificationPreferences
+                value={localPreferences.emailNotifications ?? defaultEmailPreferences}
+                onChange={(emailPrefs) =>
+                  setLocalPreferences((prev) => ({ ...prev, emailNotifications: emailPrefs }))
+                }
+                email={email}
+              />
             </div>
           </div>
         )}

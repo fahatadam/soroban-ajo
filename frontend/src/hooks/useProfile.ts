@@ -22,6 +22,21 @@ export interface UserPreferences {
   theme: 'light' | 'dark' | 'auto'
   language: string
   currency: string
+  emailNotifications?: {
+    enabled: boolean
+    frequency: 'instant' | 'daily' | 'weekly'
+    events: {
+      contributionDue24h: boolean
+      contributionDue1h: boolean
+      contributionOverdue: boolean
+      payoutReceived: boolean
+      memberJoined: boolean
+      cycleCompleted: boolean
+      announcements: boolean
+      groupInvitation: boolean
+      securityAlerts: boolean
+    }
+  }
 }
 
 export interface UserStats {

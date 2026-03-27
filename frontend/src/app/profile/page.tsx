@@ -165,7 +165,7 @@ export default function ProfilePage() {
             )}
 
             {activeSection === 'settings' && (
-              <SettingsPanel preferences={profile.preferences} onSave={updatePreferences} isLoading={loading} />
+              <SettingsPanel preferences={profile.preferences} onSave={updatePreferences} isLoading={loading} email={profile.email} />
             )}
 
             {activeSection === 'activity' && (

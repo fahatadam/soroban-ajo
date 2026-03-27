@@ -80,11 +80,38 @@ export class ProfileService {
         address,
         joinedDate: new Date().toISOString(),
         preferences: {
-          notifications: true,
-          emailUpdates: false,
-          theme: 'auto',
-          language: 'en',
-          currency: 'USD',
+          notifications: {
+            email: false,
+            push: true,
+            groupUpdates: true,
+            payoutReminders: true,
+            contributionReminders: true,
+          },
+          emailNotifications: {
+            enabled: false,
+            frequency: 'instant',
+            events: {
+              contributionDue24h: true,
+              contributionDue1h: false,
+              contributionOverdue: true,
+              payoutReceived: true,
+              memberJoined: false,
+              cycleCompleted: true,
+              announcements: false,
+              groupInvitation: true,
+              securityAlerts: true,
+            },
+          },
+          privacy: {
+            showProfile: true,
+            showActivity: true,
+            showStats: true,
+          },
+          display: {
+            theme: 'auto',
+            language: 'en',
+            currency: 'USD',
+          },
         },
         stats: {
           totalGroups: 0,
