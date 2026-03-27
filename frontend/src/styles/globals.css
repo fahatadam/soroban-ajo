@@ -64,6 +64,22 @@ body {
   min-height: 100vh;
 }
 
+/* Smooth theme transitions across the app */
+html,
+body {
+  transition:
+    background-color 250ms ease,
+    color 250ms ease;
+}
+
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 250ms;
+  transition-timing-function: ease;
+}
+
 /* Brand Patterns */
 .pattern-grid {
   background-image: url('/patterns/grid.svg');
@@ -105,7 +121,7 @@ body {
 }
 
 .gradient-mesh {
-  background: 
+  background:
     radial-gradient(at 20% 30%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
     radial-gradient(at 80% 70%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
     radial-gradient(at 50% 50%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
@@ -113,7 +129,8 @@ body {
 
 /* Animated Backgrounds */
 @keyframes gradient-shift {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -128,7 +145,8 @@ body {
 }
 
 @keyframes float-pattern {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -329,7 +347,8 @@ body {
     border-width: 2px !important;
   }
 
-  button, a {
+  button,
+  a {
     text-decoration: underline;
   }
 }

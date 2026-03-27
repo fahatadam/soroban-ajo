@@ -8,6 +8,7 @@ import { NotificationHistory } from './NotificationHistory'
 import NotificationBell from './NotificationBell'
 import Onboarding from './Onboarding'
 import TourGuide from './TourGuide'
+import { ThemeToggle } from './ThemeToggle'
 import { useOnboarding } from '@/hooks/useOnboarding'
 
 interface AppLayoutProps {
@@ -80,11 +81,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-indigo-400">🪙 Ajo</h1>
-              <span className="hidden sm:inline text-gray-600 dark:text-slate-400 text-sm">Decentralized Savings</span>
+              <h1 className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-indigo-400">
+                🪙 Ajo
+              </h1>
+              <span className="hidden sm:inline text-gray-600 dark:text-slate-400 text-sm">
+                Decentralized Savings
+              </span>
             </Link>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <NotificationBell />
               <NotificationHistory />
               <div data-tour="wallet-connect">
@@ -94,7 +100,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav id="navigation" className="flex gap-1 -mb-px overflow-x-auto" aria-label="Main navigation">
+          <nav
+            id="navigation"
+            className="flex gap-1 -mb-px overflow-x-auto"
+            aria-label="Main navigation"
+          >
             {navLinks.map((link) => {
               const isActive = pathname === link.href
               return (
@@ -110,7 +120,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                       : 'border-transparent text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 hover:border-gray-300 dark:hover:border-slate-600'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -127,7 +143,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main id="main-content" tabIndex={-1}>{children}</main>
+      <main id="main-content" tabIndex={-1}>
+        {children}
+      </main>
 
       {/* Onboarding & Tour */}
       <Onboarding />
@@ -147,12 +165,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <h3 className="font-bold text-gray-900 dark:text-slate-100 mb-3">Resources</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/docs" className="text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-indigo-400">
+                  <Link
+                    href="/docs"
+                    className="text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-indigo-400"
+                  >
                     Documentation
                   </Link>
                 </li>
                 <li>
-                  <Link href="/community" className="text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-indigo-400">
+                  <Link
+                    href="/community"
+                    className="text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-indigo-400"
+                  >
                     Community
                   </Link>
                 </li>

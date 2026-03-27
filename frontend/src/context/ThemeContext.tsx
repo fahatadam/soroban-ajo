@@ -5,8 +5,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 export type Theme = 'light' | 'dark' | 'system'
 
 type ThemeContextValue = {
+  mode: Theme
   theme: Theme
   resolvedTheme: 'light' | 'dark'
+  setMode: (theme: Theme) => void
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
 }
@@ -49,6 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(resolved)
+    root.setAttribute('data-theme', resolved)
 
     try {
       localStorage.setItem(STORAGE_KEY, theme)
@@ -66,6 +69,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setResolvedTheme(resolved)
       document.documentElement.classList.remove('light', 'dark')
       document.documentElement.classList.add(resolved)
+      document.documentElement.setAttribute('data-theme', resolved)
     }
     media.addEventListener('change', handler)
     return () => media.removeEventListener('change', handler)
@@ -83,8 +87,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value: ThemeContextValue = {
+    mode: theme,
     theme,
     resolvedTheme,
+    setMode: setTheme,
     setTheme,
     toggleTheme,
   }
