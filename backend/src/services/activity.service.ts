@@ -209,7 +209,7 @@ export class ActivityService {
       [groupId]
     );
 
-    return Object.fromEntries(rows.map((r) => [r.event_type, parseInt(r.count, 10)]));
+    return Object.fromEntries(rows.map((r: { event_type: string; count: string }) => [r.event_type, parseInt(r.count, 10)]))
   }
 }
 

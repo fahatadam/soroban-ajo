@@ -31,7 +31,7 @@ export class MultiSigService {
       throw new InvalidThresholdError(threshold, signers.length)
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // Check if config already exists
       const existing = await tx.multiSigConfig.findUnique({
         where: { groupId },
@@ -176,7 +176,7 @@ export class MultiSigService {
     status: ProposalStatus
     readyToExecute: boolean
   }> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const proposal = await tx.transactionProposal.findUnique({
         where: { id: proposalId },
         include: {
@@ -211,7 +211,7 @@ export class MultiSigService {
 
       // Find signer config
       const signerConfig = proposal.multiSig.signers.find(
-        (s) => s.walletAddress === signerWalletAddress
+        (s: any) => s.walletAddress === signerWalletAddress
       )
 
       if (!signerConfig) {
@@ -219,7 +219,7 @@ export class MultiSigService {
       }
 
       // Check for duplicate signature
-      const existingSignature = proposal.signatures.find((s) => s.signerId === signerConfig.id)
+      const existingSignature = proposal.signatures.find((s: any) => s.signerId === signerConfig.id)
 
       if (existingSignature) {
         throw new DuplicateSignatureError(signerConfig.id)
@@ -272,7 +272,7 @@ export class MultiSigService {
     txHash: string
     status: ProposalStatus
   }> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const proposal = await tx.transactionProposal.findUnique({
         where: { id: proposalId },
         include: {
@@ -303,7 +303,7 @@ export class MultiSigService {
       // Build and submit transaction
       const txHash = await this.submitTransaction(
         proposal.transactionXdr,
-        proposal.signatures.map((s) => s.signature)
+        proposal.signatures.map((s: any) => s.signature)
       )
 
       // Update proposal
@@ -383,7 +383,7 @@ export class MultiSigService {
       expiresAt: proposal.expiresAt,
       createdAt: proposal.createdAt,
       metadata: proposal.metadata ? JSON.parse(proposal.metadata) : undefined,
-      signatures: proposal.signatures.map((s) => ({
+      signatures: proposal.signatures.map((s: any) => ({
         walletAddress: s.signer.walletAddress,
         signedAt: s.signedAt,
       })),

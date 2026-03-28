@@ -58,7 +58,7 @@ export class TransactionTracker {
       const result = await this.server.transactions().transaction(txHash).call()
       const status: TxStatus = result.successful ? 'confirmed' : 'failed'
       await this.updateStatus(txHash, status, {
-        ledger: result.ledger,
+        ledger: result.ledger as unknown as number,
         confirmedAt: new Date(result.created_at),
       })
     } catch (err: unknown) {

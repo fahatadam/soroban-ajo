@@ -159,7 +159,7 @@ function injectVars(html: string, vars: Record<string, string>): string {
  */
 export function renderTemplate(name: TemplateName, vars: TemplateVars): string {
   const html = compileTemplate(name)
-  return injectVars(html, vars as Record<string, string>)
+  return injectVars(html, vars as unknown as Record<string, string>)
 }
 
 /**

@@ -164,11 +164,11 @@ export class BIService {
 
     if (!user) return
 
-    const totalContributed = user.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    const totalContributed = user.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
     const groupsJoined = user.groups.length
     const lastActiveAt =
       user.contributions.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0]?.createdAt || user.updatedAt
 
     const retentionRate = await this.calculateUserRetentionRate(userId)
@@ -210,9 +210,9 @@ export class BIService {
 
     if (!group) return
 
-    const totalContributions = group.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    const totalContributions = group.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
     const memberCount = group.members.length
-    const completedRounds = Math.max(...group.contributions.map((c) => c.round))
+    const completedRounds = Math.max(...group.contributions.map((c: any) => c.round))
     const successRate = await this.calculateGroupSuccessRate(groupId)
     const defaultRate = await this.calculateGroupDefaultRate(groupId)
     const avgContributionTime = await this.calculateAvgContributionTime(groupId)
@@ -365,7 +365,7 @@ export class BIService {
       },
     })
 
-    const totalContributions = contributions.reduce((sum, c) => sum + Number(c._sum.amount || 0), 0)
+    const totalContributions = contributions.reduce((sum: number, c: any) => sum + Number(c._sum.amount || 0), 0)
     const avgContributionAmount =
       contributions.length > 0 ? totalContributions / contributions.length : 0
 
@@ -411,9 +411,9 @@ export class BIService {
     })
 
     const totalGroups = groups.length
-    const activeGroups = groups.filter((g) => g.isActive).length
+    const activeGroups = groups.filter((g: any) => g.isActive).length
     const avgGroupSize =
-      groups.length > 0 ? groups.reduce((sum, g) => sum + g._count.members, 0) / groups.length : 0
+      groups.length > 0 ? groups.reduce((sum: number, g: any) => sum + g._count.members, 0) / groups.length : 0
 
     const metrics = await prisma.groupMetrics.aggregate({
       where: {
@@ -440,7 +440,7 @@ export class BIService {
       take: limit,
     })
 
-    return cohorts.map((cohort) => ({
+    return cohorts.map((cohort: any) => ({
       cohortDate: cohort.cohortDate,
       cohortSize: cohort.cohortSize,
       retentionRates: [cohort.retentionRate],
@@ -453,7 +453,7 @@ export class BIService {
       take: 100,
     })
 
-    return users.map((user) => ({
+    return users.map((user: any) => ({
       userId: user.userId,
       churnProbability: user.churnScore,
       riskFactors: this.getRiskFactors(user.churnScore),
@@ -466,7 +466,7 @@ export class BIService {
       take: 100,
     })
 
-    return groups.map((group) => ({
+    return groups.map((group: any) => ({
       groupId: group.groupId,
       successProbability: group.successRate,
       riskFactors: this.getRiskFactors(group.riskScore),
@@ -581,7 +581,7 @@ export class BIService {
       (Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     )
     const contributionsInLast30Days = user.contributions.filter(
-      (c) => Date.now() - new Date(c.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
+      (c: any) => Date.now() - new Date(c.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
     ).length
 
     return daysSinceJoin > 30 ? contributionsInLast30Days / 30 : 1
@@ -600,7 +600,7 @@ export class BIService {
 
     if (!user) return 0
 
-    return user.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    return user.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
   }
 
   private async calculateGroupSuccessRate(groupId: string): Promise<number> {

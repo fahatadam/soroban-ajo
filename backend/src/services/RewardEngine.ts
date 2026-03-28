@@ -1,6 +1,9 @@
-import { PrismaClient, Reward } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { RewardConfiguration, RewardDefinition, NFTMetadata } from './RewardConfigParser';
 import { FraudDetector } from './FraudDetector';
+
+// Local type alias since Reward model may not be in the generated Prisma client
+type Reward = Record<string, any>;
 
 /**
  * Core engine for reward calculation, distribution, and management

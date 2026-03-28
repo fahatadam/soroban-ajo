@@ -1,10 +1,16 @@
 import * as cron from 'node-cron'
-import {
-    syncQueue,
-    reminderQueue,
-    analyticsQueue,
-} from '../queues/queueManager'
+import { createQueue, getQueue } from '../queues/queueManager'
+import { SYNC_QUEUE_NAME } from '../queues/syncQueue'
+import { EMAIL_QUEUE_NAME } from '../queues/emailQueue'
 import { logger } from '../utils/logger'
+
+// Queue name constants for reminder and analytics (not yet in dedicated files)
+const REMINDER_QUEUE_NAME = 'reminder'
+const ANALYTICS_QUEUE_NAME = 'analytics'
+
+function getSyncQueue() { return getQueue(SYNC_QUEUE_NAME) || createQueue(SYNC_QUEUE_NAME) }
+function getReminderQueue() { return getQueue(REMINDER_QUEUE_NAME) || createQueue(REMINDER_QUEUE_NAME) }
+function getAnalyticsQueue() { return getQueue(ANALYTICS_QUEUE_NAME) || createQueue(ANALYTICS_QUEUE_NAME) }
 
 const scheduledTasks: cron.ScheduledTask[] = []
 
@@ -15,7 +21,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('*/5 * * * *', async () => {
             logger.info('Cron: scheduling blockchain sync job')
-            await syncQueue.add('blockchain-sync', { triggeredBy: 'cron' })
+            await getSyncQueue().add('blockchain-sync', { triggeredBy: 'cron' })
         })
     )
 
@@ -23,7 +29,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 8 * * *', async () => {
             logger.info('Cron: scheduling daily contribution reminders')
-            await reminderQueue.add('daily-reminders', { type: 'daily_contribution' })
+            await getReminderQueue().add('daily-reminders', { type: 'daily_contribution' })
         })
     )
 
@@ -31,7 +37,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 9 * * 1', async () => {
             logger.info('Cron: scheduling weekly summary')
-            await reminderQueue.add('weekly-summary', { type: 'weekly_summary' })
+            await getReminderQueue().add('weekly-summary', { type: 'weekly_summary' })
         })
     )
 
@@ -39,7 +45,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 9 1 * *', async () => {
             logger.info('Cron: scheduling monthly analytics report')
-            await reminderQueue.add('monthly-report', { type: 'monthly_report' })
+            await getReminderQueue().add('monthly-report', { type: 'monthly_report' })
         })
     )
 
@@ -47,7 +53,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 * * * *', async () => {
             logger.info('Cron: scheduling hourly analytics ETL')
-            await analyticsQueue.add('hourly-etl', { type: 'hourly_etl' })
+            await getAnalyticsQueue().add('hourly-etl', { type: 'hourly_etl' })
         })
     )
 
@@ -55,7 +61,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 0 * * *', async () => {
             logger.info('Cron: scheduling daily analytics ETL')
-            await analyticsQueue.add('daily-etl', { type: 'daily_etl' })
+            await getAnalyticsQueue().add('daily-etl', { type: 'daily_etl' })
         })
     )
 
@@ -63,7 +69,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 1 * * 0', async () => {
             logger.info('Cron: scheduling cohort analysis')
-            await analyticsQueue.add('cohort-analysis', { type: 'cohort_analysis' })
+            await getAnalyticsQueue().add('cohort-analysis', { type: 'cohort_analysis' })
         })
     )
 
@@ -71,7 +77,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 3 * * *', async () => {
             logger.info('Cron: scheduling predictive metrics update')
-            await analyticsQueue.add('metrics-update', { type: 'metrics_update' })
+            await getAnalyticsQueue().add('metrics-update', { type: 'metrics_update' })
         })
     )
 
@@ -79,7 +85,7 @@ export function startScheduler(): void {
     scheduledTasks.push(
         cron.schedule('0 2 * * *', async () => {
             logger.info('Cron: scheduling database cleanup')
-            await analyticsQueue.add('cleanup', { type: 'cleanup' })
+            await getAnalyticsQueue().add('cleanup', { type: 'cleanup' })
         })
     )
 

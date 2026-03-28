@@ -221,7 +221,7 @@ export class UserDataExportService {
     if (data.groups?.length) {
       const rows = [
         ['Group ID', 'Group Name', 'Contribution Amount', 'Frequency', 'Max Members', 'Current Round', 'Active', 'Joined At'],
-        ...data.groups.map((m) => [
+        ...data.groups.map((m: any) => [
           m.group.id,
           m.group.name,
           m.group.contributionAmount.toString(),
@@ -238,7 +238,7 @@ export class UserDataExportService {
     if (data.transactions?.length) {
       const rows = [
         ['Transaction ID', 'Group ID', 'Group Name', 'Amount', 'Round', 'Tx Hash', 'Date'],
-        ...data.transactions.map((t) => [
+        ...data.transactions.map((t: any) => [
           t.id,
           t.group.id,
           t.group.name,
@@ -281,7 +281,7 @@ export class UserDataExportService {
     }
 
     if (data.groups) {
-      output.groups = data.groups.map((m) => ({
+      output.groups = data.groups.map((m: any) => ({
         joinedAt: m.joinedAt,
         group: {
           ...m.group,
@@ -291,7 +291,7 @@ export class UserDataExportService {
     }
 
     if (data.transactions) {
-      output.transactions = data.transactions.map((t) => ({
+      output.transactions = data.transactions.map((t: any) => ({
         ...t,
         amount: t.amount.toString(),
       }))
@@ -354,7 +354,7 @@ export class UserDataExportService {
       ;(doc as any).autoTable({
         startY: y,
         head: [['Group Name', 'Contribution', 'Round', 'Active', 'Joined']],
-        body: data.groups.map((m) => [
+        body: data.groups.map((m: any) => [
           m.group.name,
           m.group.contributionAmount.toString(),
           m.group.currentRound,
@@ -376,7 +376,7 @@ export class UserDataExportService {
       ;(doc as any).autoTable({
         startY: y,
         head: [['Group', 'Amount', 'Round', 'Tx Hash', 'Date']],
-        body: data.transactions.map((t) => [
+        body: data.transactions.map((t: any) => [
           t.group.name,
           t.amount.toString(),
           t.round,

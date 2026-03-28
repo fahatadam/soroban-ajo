@@ -1,7 +1,7 @@
 import { Server as HTTPServer } from 'http'
 import { Server as SocketIOServer, Socket } from 'socket.io'
 import { prisma } from '../config/database'
-import logger from '../utils/logger'
+import { logger } from '../utils/logger'
 
 interface SocketData {
   userId: string
@@ -49,7 +49,7 @@ class ChatService {
       }
     })
 
-    this.io.on('connection', (socket: Socket<unknown, unknown, unknown, SocketData>) => {
+    this.io.on('connection', (socket: Socket<any, any, any, SocketData>) => {
       logger.info(`User connected: ${socket.data.userId}`)
       this.handleConnection(socket)
     })
@@ -57,7 +57,7 @@ class ChatService {
     logger.info('Socket.IO initialized')
   }
 
-  private handleConnection(socket: Socket<unknown, unknown, unknown, SocketData>) {
+  private handleConnection(socket: Socket<any, any, any, SocketData>) {
     const { userId, walletAddress } = socket.data
 
     // Track user sockets

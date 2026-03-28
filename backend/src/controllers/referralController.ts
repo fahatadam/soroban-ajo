@@ -82,7 +82,7 @@ export const claimReferral = async (req: Request, res: Response) => {
       refereeId,
       code,
       metadata: {
-        ipAddress: req.ip,
+        ipAddress: req.ip ?? 'unknown',
         userAgent: req.get('user-agent') || 'unknown',
         deviceFingerprint: req.get('x-device-fingerprint') || undefined,
         registrationTimestamp: new Date(),

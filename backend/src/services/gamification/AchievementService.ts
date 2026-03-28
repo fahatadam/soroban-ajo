@@ -29,7 +29,7 @@ export class AchievementService {
 
     if (!gamification) return awardedIds;
 
-    const existingIds = new Set(existingAchievements.map((a) => a.achievementId));
+    const existingIds = new Set(existingAchievements.map((a: any) => a.achievementId));
 
     for (const achievement of achievements) {
       if (existingIds.has(achievement.id)) continue;
@@ -107,7 +107,7 @@ export class AchievementService {
   }
 
   async awardAchievement(userId: string, achievementId: string): Promise<void> {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Check for duplicate
       const existing = await tx.rewardHistory.findUnique({
         where: {
@@ -200,7 +200,7 @@ export class AchievementService {
       orderBy: { unlockedAt: 'desc' },
     });
 
-    return userAchievements.map((ua) => ({
+    return userAchievements.map((ua: any) => ({
       id: ua.achievement.id,
       name: ua.achievement.name,
       description: ua.achievement.description,

@@ -16,7 +16,7 @@ export class PointsService {
       throw new Error('Points must be positive');
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // Check for duplicate reward if referenceId provided
       if (referenceId && referenceType) {
         const existing = await tx.pointTransaction.findUnique({
