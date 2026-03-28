@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { ApiError, nextApiClient } from '@/lib/apiClient'
 import { apiPaths } from '@/lib/apiEndpoints'
 
+/**
+ * Hook for executing and tracking cross-chain asset bridge operations.
+ * Communicates with the BFF (Backend-for-Frontend) to initiate transfers
+ * and poll for finality on the receiving chain.
+ * 
+ * @returns Methods for bridge initiation, status tracking, and history loading
+ */
 export function useBridge() {
   const [status, setStatus] = useState<string | null>(null)
   const [history, setHistory] = useState<any[]>([])

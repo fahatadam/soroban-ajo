@@ -40,6 +40,13 @@ interface UseActivityFeedParams extends FetchFeedParams {
   enabled?: boolean;
 }
 
+/**
+ * Hook for fetching a single page of activity events for a group or user.
+ * 
+ * @param params - Query filters (groupId, userId, eventTypes)
+ * @param params.token - JWT bearer token for backend auth
+ * @returns Query result with activity data
+ */
 export function useActivityFeed({
   token,
   enabled = true,
@@ -54,6 +61,12 @@ export function useActivityFeed({
   });
 }
 
+/**
+ * Hook for infinite-scroll activity feed using cursor-based pagination.
+ * 
+ * @param params - Query filters and auth token
+ * @returns Infinite query result with fetchNextPage capabilities
+ */
 export function useInfiniteActivityFeed({
   token,
   enabled = true,

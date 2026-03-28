@@ -1,13 +1,31 @@
+/**
+ * @file GroupsList.tsx
+ * @description A tabular list component for displaying savings groups with high data density.
+ * Provides a professional table view with sorting (implicit), filtering (via parent), and direct actions.
+ */
+
 import { Group } from '@/types'
 import React from 'react'
 
+/**
+ * Props for the GroupsList component.
+ */
 interface GroupsListProps {
+  /** Collection of group data to be displayed in rows */
   groups?: Group[]
+  /** If true, renders a set of animated skeleton rows */
   isLoading?: boolean
+  /** Callback fired when a row is clicked (excluding action buttons) */
   onGroupClick?: (groupId: string) => void
+  /** Callback fired specifically when the 'Join' button is clicked */
   onJoinGroup?: (groupId: string) => void
 }
 
+/**
+ * A feature-rich table component for browsing savings groups.
+ * Optimized for larger screens where a grid might be less efficient for scanning large amounts of data.
+ * Includes visual status indicators, progress bars for membership, and interactive rows.
+ */
 export const GroupsList: React.FC<GroupsListProps> = ({
   groups = [],
   isLoading = false,

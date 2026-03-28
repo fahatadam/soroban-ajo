@@ -3,12 +3,12 @@ import { AppError } from '../errors/AppError'
 import { logger } from './logger'
 
 /**
- * Extract and validate user ID from request
- * Prioritizes req.user.publicKey, falls back to walletAddress, then userId
- *
- * @param req - Express request object
- * @returns Validated user ID
- * @throws AppError if no valid user ID found
+ * Extracts and strictly validates a user identity from the request.
+ * Prioritizes the authenticated public key, then falls back to walletAddress or body.
+ * 
+ * @param req - The Express request object containing login state
+ * @returns Non-empty, trimmed user ID or public key
+ * @throws {AppError} If no valid identity can be resolved (401 Unauthorized)
  */
 export function extractUserId(req: AuthRequest): string {
   const userId = req.user?.publicKey || req.user?.walletAddress || req.body?.userId
@@ -40,12 +40,11 @@ export function extractWalletAddress(req: AuthRequest): string {
 }
 
 /**
- * Build complete auth context from request
- * Validates all required auth fields
- *
- * @param req - Express request object
- * @returns Complete authentication context
- * @throws AppError if required fields missing
+ * Constructs a comprehensive authentication context for downstream services.
+ * Aggregates identity, contact, and permission metadata.
+ * 
+ * @param req - The authenticated Express request
+ * @returns Flattened AuthContext object
  */
 export function buildAuthContext(req: AuthRequest): AuthContext {
   const userId = extractUserId(req)

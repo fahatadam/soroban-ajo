@@ -16,7 +16,11 @@ const SESSION_KEY = 'soroban_ajo_auth_session'
 
 export class AuthService {
   /**
-   * Create authentication session
+   * Create and persist an authentication session.
+   * 
+   * @param address - User's Stellar public key
+   * @param network - Current network ('testnet' or 'mainnet')
+   * @returns The created session object
    */
   static createSession(address: string, network: 'testnet' | 'mainnet' = 'testnet'): AuthSession {
     const session: AuthSession = {
@@ -36,7 +40,9 @@ export class AuthService {
   }
 
   /**
-   * Get current session
+   * Retrieve the current authentication session from storage.
+   * 
+   * @returns Current session or null if not authenticated/failed
    */
   static getSession(): AuthSession | null {
     try {
@@ -58,7 +64,7 @@ export class AuthService {
   }
 
   /**
-   * Clear session (logout)
+   * Clear the current session (logout).
    */
   static clearSession(): void {
     try {
@@ -69,7 +75,9 @@ export class AuthService {
   }
 
   /**
-   * Check if user is authenticated
+   * Check if a valid session exists.
+   * 
+   * @returns True if authenticated
    */
   static isAuthenticated(): boolean {
     const session = this.getSession()
@@ -77,7 +85,9 @@ export class AuthService {
   }
 
   /**
-   * Get authenticated user address
+   * Get the address of the authenticated user.
+   * 
+   * @returns Wallet address or null
    */
   static getAuthenticatedAddress(): string | null {
     const session = this.getSession()
@@ -85,8 +95,12 @@ export class AuthService {
   }
 
   /**
-   * Verify wallet ownership (simplified)
-   * In production, this would verify a signature from the wallet
+   * Verify wallet ownership.
+   * Currently simplified to basic structure check.
+   * In production, this would verify a signature from the wallet.
+   * 
+   * @param address - Address to verify
+   * @returns True if valid structure
    */
   static async verifyWalletOwnership(address: string): Promise<boolean> {
     try {
@@ -104,8 +118,10 @@ export class AuthService {
   }
 
   /**
-   * Require authentication middleware
-   * Throws error if not authenticated
+   * Utility to require authentication.
+   * 
+   * @returns Authenticated address
+   * @throws {Error} if not authenticated
    */
   static requireAuth(): string {
     const address = this.getAuthenticatedAddress()
@@ -118,7 +134,9 @@ export class AuthService {
   }
 
   /**
-   * Update session network
+   * Update the network configuration in the current session.
+   * 
+   * @param network - New network value
    */
   static updateNetwork(network: 'testnet' | 'mainnet'): void {
     const session = this.getSession()
@@ -131,7 +149,9 @@ export class AuthService {
 }
 
 /**
- * React hook for authentication
+ * React hook for managing authentication state within components.
+ * 
+ * @returns Authentication state and control functions
  */
 export const useAuthSession = () => {
   const session = AuthService.getSession()

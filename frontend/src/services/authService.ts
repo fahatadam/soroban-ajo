@@ -311,6 +311,16 @@ class AuthService {
     }
   }
 
+  /**
+   * Requests a backend authentication token using a public key and optional TOTP.
+   * 
+   * @param params - Request parameters
+   * @param params.publicKey - User's Stellar public key
+   * @param params.pendingToken - Optional token if 2FA is required
+   * @param params.totpCode - Optional 2FA code
+   * @returns AuthTokenResponse or TwoFactorRequiredResponse
+   * @throws {AuthError} If the API request fails
+   */
   async requestBackendToken(params: {
     publicKey: string
     pendingToken?: string
@@ -337,6 +347,13 @@ class AuthService {
     }
   }
 
+  /**
+   * Get the current 2FA status for a user.
+   * 
+   * @param token - Bearer token for authentication
+   * @returns 2FA status response
+   * @throws {AuthError} If the API request fails
+   */
   async getTwoFactorStatus(token: string): Promise<TwoFactorStatusResponse> {
     try {
       return await backendApiClient.request<TwoFactorStatusResponse>({
@@ -351,6 +368,13 @@ class AuthService {
     }
   }
 
+  /**
+   * Initialize 2FA setup by generating a secret and QR code.
+   * 
+   * @param token - Bearer token for authentication
+   * @returns 2FA setup response (secret, QR)
+   * @throws {AuthError} If the API request fails
+   */
   async setupTwoFactor(token: string): Promise<TwoFactorSetupResponse> {
     try {
       return await backendApiClient.request<TwoFactorSetupResponse>({
@@ -366,6 +390,12 @@ class AuthService {
     }
   }
 
+  /**
+   * Enable 2FA for the account after verification.
+   * 
+   * @param token - Bearer token
+   * @param totpCode - Verification code from authenticator app
+   */
   async enableTwoFactor(token: string, totpCode: string): Promise<{ success: boolean; enabled: boolean }> {
     try {
       return await backendApiClient.request<{ success: boolean; enabled: boolean }>({
@@ -382,6 +412,12 @@ class AuthService {
     }
   }
 
+  /**
+   * Disable 2FA for the account.
+   * 
+   * @param token - Bearer token
+   * @param totpCode - Verification code from authenticator app
+   */
   async disableTwoFactor(token: string, totpCode: string): Promise<{ success: boolean; enabled: boolean }> {
     try {
       return await backendApiClient.request<{ success: boolean; enabled: boolean }>({

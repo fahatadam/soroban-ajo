@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react'
 import { Group } from '@/types'
 
+/**
+ * Extended group interface for the explore discovery page.
+ * Includes derived stats like popularity scores and creator reputation.
+ */
 export interface ExploreGroup extends Group {
   tags: string[]
   popularity: number
@@ -10,7 +14,11 @@ export interface ExploreGroup extends Group {
   isJoined: boolean
 }
 
+/**
+ * Filter configuration for group discovery.
+ */
 export interface ExploreFilters {
+  /** Text search for name or description */
   search: string
   minAmount: number | ''
   maxAmount: number | ''
@@ -446,6 +454,13 @@ const MOCK_GROUPS: ExploreGroup[] = [
   },
 ]
 
+/**
+ * Hook for managing the group exploration and discovery state.
+ * Handles client-side filtering, multi-field sorting, and pagination of 
+ * available savings groups.
+ * 
+ * @returns Filtered data, pagination state, and update actions
+ */
 export function useExplore() {
   const [filters, setFilters] = useState<ExploreFilters>(defaultFilters)
   const [sort, setSort] = useState<ExploreSort>({ field: 'popularity', direction: 'desc' })

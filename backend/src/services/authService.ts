@@ -18,6 +18,16 @@ export interface JWTPayload {
 }
 
 export class AuthService {
+  /**
+   * Generates a signed JWT for a user with specific claims and expiration.
+   * 
+   * @param publicKey - The Stellar public key of the user
+   * @param options - Token configuration options
+   * @param options.expiresIn - Duration string (e.g., '1h', '7d')
+   * @param options.purpose - The intended use of the token ('auth' or 'two_factor')
+   * @param options.twoFactorVerified - Whether 2FA has been successfully passed
+   * @returns A signed JWT string
+   */
   static generateToken(
     publicKey: string,
     options: {
@@ -39,10 +49,23 @@ export class AuthService {
     )
   }
 
+  /**
+   * Decodes and validates a JWT string against the system secret.
+   * 
+   * @param token - The JWT string to verify
+   * @returns The decoded JWTPayload
+   * @throws {Error} If the token is invalid or expired
+   */
   static verifyToken(token: string): JWTPayload {
     return jwt.verify(token, JWT_SECRET) as JWTPayload
   }
 
+  /**
+   * Generates a short-lived token specifically for two-factor authentication challenges.
+   * 
+   * @param publicKey - The Stellar public key of the user
+   * @returns A temporary JWT for 2FA verification
+   */
   static generateTwoFactorChallenge(publicKey: string): string {
     return this.generateToken(publicKey, {
       expiresIn: TWO_FACTOR_CHALLENGE_EXPIRES_IN,
@@ -51,6 +74,14 @@ export class AuthService {
     })
   }
 
+  /**
+   * Validates a two-factor challenge token and ensures it matches the expected user.
+   * 
+   * @param token - The 2FA challenge token
+   * @param publicKey - The user's expected public key
+   * @returns The validated JWTPayload
+   * @throws {Error} If the token is invalid, expired, or doesn't match the user/purpose
+   */
   static verifyTwoFactorChallenge(token: string, publicKey: string): JWTPayload {
     const payload = this.verifyToken(token)
 

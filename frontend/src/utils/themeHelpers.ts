@@ -7,7 +7,11 @@ export type ResolvedTheme = 'light' | 'dark'
 
 const STORAGE_KEY = 'soroban-ajo-theme'
 
-/** Read the stored theme preference from localStorage */
+/**
+ * Read the stored theme preference from localStorage.
+ * 
+ * @returns 'light', 'dark', or 'system'
+ */
 export function getStoredTheme(): 'light' | 'dark' | 'system' {
   if (typeof window === 'undefined') return 'system'
   try {
@@ -19,13 +23,23 @@ export function getStoredTheme(): 'light' | 'dark' | 'system' {
   return 'system'
 }
 
-/** Detect the OS-level color scheme preference */
+/**
+ * Detect the OS-level color scheme preference using matchMedia.
+ * 
+ * @returns 'light' or 'dark'
+ */
 export function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-/** Apply a theme class to <html> and persist the choice */
+/**
+ * Apply the selected theme to the document and persist the choice.
+ * Manages the 'light'/'dark' classes on the root element.
+ * 
+ * @param theme - The theme to apply
+ * @returns The resolved theme ('light' or 'dark')
+ */
 export function applyTheme(theme: 'light' | 'dark' | 'system'): ResolvedTheme {
   const resolved = theme === 'system' ? getSystemTheme() : theme
   const root = document.documentElement
@@ -41,7 +55,10 @@ export function applyTheme(theme: 'light' | 'dark' | 'system'): ResolvedTheme {
 
 /**
  * Returns Tailwind classes for a surface that adapts to dark mode.
- * Useful for components that can't use CSS-layer overrides.
+ * Useful for components where standard utility classes are insufficient.
+ * 
+ * @param elevated - Whether the surface should appear raised
+ * @returns String of Tailwind classes
  */
 export function surfaceClasses(elevated = false): string {
   return elevated
@@ -49,7 +66,12 @@ export function surfaceClasses(elevated = false): string {
     : 'bg-gray-50 dark:bg-dark-bg-secondary border border-gray-200 dark:border-dark-border'
 }
 
-/** Returns the correct text color class for primary/secondary text */
+/**
+ * Returns Tailwind text color classes based on importance.
+ * 
+ * @param variant - 'primary', 'secondary', or 'muted'
+ * @returns Tailwind text color class
+ */
 export function textClasses(variant: 'primary' | 'secondary' | 'muted' = 'primary'): string {
   const map = {
     primary: 'text-gray-900 dark:text-slate-100',

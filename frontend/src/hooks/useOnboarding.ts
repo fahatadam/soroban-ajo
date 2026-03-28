@@ -19,6 +19,12 @@ interface OnboardingState {
   prevStep: () => void;
 }
 
+/**
+ * Zustand store hook for managing the app onboarding flow.
+ * Tracks whether the user has completed onboarding and the current step in the process.
+ * 
+ * @returns Object with onboarding state and control methods (next, prev, skip, complete)
+ */
 export const useOnboarding = create<OnboardingState>()(
   persist(
     (set) => ({

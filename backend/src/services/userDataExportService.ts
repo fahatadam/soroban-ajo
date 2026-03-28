@@ -38,6 +38,14 @@ function ensureExportsDir() {
 export class UserDataExportService {
   constructor(private prisma: PrismaClient) {}
 
+  /**
+   * Initiates a new data export request for a user.
+   * Creates a 'pending' record and starts asynchronous processing.
+   * 
+   * @param userId - Wallet address of the user requesting the export
+   * @param request - Configuration for the export (format, data types, date range)
+   * @returns Promise resolving to the initial ExportResult
+   */
   async createExport(userId: string, request: UserExportRequest): Promise<ExportResult> {
     const exportRecord = await this.prisma.dataExport.create({
       data: {
@@ -406,6 +414,12 @@ export class UserDataExportService {
     })
   }
 
+  /**
+   * Permanently deletes an export record and its associated file from the filesystem.
+   * 
+   * @param exportId - The unique ID of the export
+   * @param userId - The wallet address of the owner (to verify ownership)
+   */
   async deleteExport(exportId: string, userId: string): Promise<void> {
     const record = await this.prisma.dataExport.findFirst({ where: { id: exportId, userId } })
     if (!record) return
@@ -417,6 +431,13 @@ export class UserDataExportService {
     await this.prisma.dataExport.delete({ where: { id: exportId } })
   }
 
+  /**
+   * Retrieves file information for streaming an export to a client.
+   * 
+   * @param exportId - The unique ID of the export
+   * @param userId - The wallet address of the owner
+   * @returns Promise resolving to the file path, MIME type, and filename, or null if not ready/found
+   */
   async streamExport(exportId: string, userId: string): Promise<{ filePath: string; mimeType: string; filename: string } | null> {
     const record = await this.prisma.dataExport.findFirst({ where: { id: exportId, userId } })
     if (!record || record.status !== 'completed' || !record.filePath) return null

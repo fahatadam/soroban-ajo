@@ -3,6 +3,8 @@
  * Issue #317: Gradient color system
  */
 
+import React from 'react'
+
 export type GradientVariant =
   | 'primary'
   | 'success'
@@ -32,6 +34,12 @@ export const gradientsDark: Partial<Record<GradientVariant, string>> = {
 /**
  * Returns the Tailwind CSS class for a gradient button variant
  */
+/**
+ * Returns the Tailwind CSS class for a gradient button variant.
+ * 
+ * @param variant - The gradient color variant
+ * @returns Tailwind utility class name
+ */
 export function getGradientButtonClass(variant: GradientVariant): string {
   const map: Partial<Record<GradientVariant, string>> = {
     primary: 'btn-gradient-primary',
@@ -43,6 +51,12 @@ export function getGradientButtonClass(variant: GradientVariant): string {
 
 /**
  * Returns the Tailwind CSS class for a gradient badge variant
+ */
+/**
+ * Returns the Tailwind CSS class for a gradient badge variant.
+ * 
+ * @param variant - The gradient color variant
+ * @returns Tailwind utility class name
  */
 export function getGradientBadgeClass(variant: GradientVariant): string {
   const map: Partial<Record<GradientVariant, string>> = {
@@ -58,6 +72,12 @@ export function getGradientBadgeClass(variant: GradientVariant): string {
 /**
  * Returns the Tailwind CSS class for a gradient progress bar variant
  */
+/**
+ * Returns the Tailwind CSS class for a gradient progress bar variant.
+ * 
+ * @param variant - The gradient color variant
+ * @returns Tailwind utility class name
+ */
 export function getGradientProgressClass(variant: GradientVariant): string {
   const map: Partial<Record<GradientVariant, string>> = {
     primary: 'progress-bar-gradient-primary',
@@ -70,6 +90,12 @@ export function getGradientProgressClass(variant: GradientVariant): string {
 
 /**
  * Returns inline style for gradient text (bg-clip-text approach)
+ */
+/**
+ * Returns inline CSS styles for rendering gradient text using background-clip.
+ * 
+ * @param variant - The gradient color variant
+ * @returns CSSProperties for React components
  */
 export function getGradientTextStyle(variant: GradientVariant): React.CSSProperties {
   return {

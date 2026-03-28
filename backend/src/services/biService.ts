@@ -60,6 +60,15 @@ export interface FunnelAnalysis {
 }
 
 export class BIService {
+  /**
+   * Records a business intelligence event to the analytics database.
+   * 
+   * @param eventType - The category of the event (e.g., 'signup', 'payout_executed')
+   * @param userId - Optional ID of the user associated with the event
+   * @param groupId - Optional ID of the group associated with the event
+   * @param eventData - Optional arbitrary structured data for the event
+   * @returns Promise resolving when the event is tracked
+   */
   async trackEvent(eventType: string, userId?: string, groupId?: string, eventData?: any) {
     try {
       await prisma.analyticsEvent.create({
@@ -75,6 +84,13 @@ export class BIService {
     }
   }
 
+  /**
+   * Calculates a comprehensive set of advanced business metrics for a given date range.
+   * Includes user retention, churn, LTV, financial performance, and cohort analysis.
+   * 
+   * @param dateRange - Optional start and end dates for the analysis
+   * @returns Promise resolving to a structured AdvancedMetrics object
+   */
   async calculateAdvancedMetrics(dateRange?: { start: Date; end: Date }): Promise<AdvancedMetrics> {
     const where = dateRange
       ? {
@@ -117,6 +133,12 @@ export class BIService {
     }
   }
 
+  /**
+   * Generates predictive analytics for users and groups using historical data.
+   * Predicts churn probabilities, group success rates, and optimal contribution amounts.
+   * 
+   * @returns Promise resolving to a PredictiveMetrics object
+   */
   async generatePredictiveMetrics(): Promise<PredictiveMetrics> {
     const [churnPrediction, groupSuccessPrediction, optimalContribution] = await Promise.all([
       this.predictUserChurn(),
@@ -131,6 +153,12 @@ export class BIService {
     }
   }
 
+  /**
+   * Analyzes the user journey through predefined funnel stages.
+   * Calculates conversion rates, drop-offs, and average time spent in each stage.
+   * 
+   * @returns Promise resolving to an array of funnel analysis results
+   */
   async analyzeFunnel(): Promise<FunnelAnalysis[]> {
     const funnelStages = [
       'visit',
@@ -153,6 +181,12 @@ export class BIService {
     return funnelData
   }
 
+  /**
+   * Recomputes and updates the persisted metrics for a specific user.
+   * 
+   * @param userId - The unique identifier of the user
+   * @returns Promise resolving when metrics are updated
+   */
   async updateUserMetrics(userId: string) {
     const user = await prisma.user.findUnique({
       where: { walletAddress: userId },
@@ -199,6 +233,12 @@ export class BIService {
     })
   }
 
+  /**
+   * Recomputes and updates the persisted metrics for a specific savings group.
+   * 
+   * @param groupId - The unique identifier of the group
+   * @returns Promise resolving when metrics are updated
+   */
   async updateGroupMetrics(groupId: string) {
     const group = await prisma.group.findUnique({
       where: { id: groupId },

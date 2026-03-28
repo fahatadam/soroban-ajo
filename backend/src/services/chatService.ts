@@ -13,6 +13,12 @@ class ChatService {
   private userSockets: Map<string, Set<string>> = new Map() // userId -> Set of socketIds
   private roomParticipants: Map<string, Set<string>> = new Map() // roomId -> Set of userIds
 
+  /**
+   * Initializes the Socket.IO server with CORS configuration and authentication middleware.
+   * Sets up connection handlers for authorized users.
+   * 
+   * @param server - The HTTP server instance to attach to
+   */
   init(server: HTTPServer) {
     this.io = new SocketIOServer(server, {
       cors: {
@@ -253,6 +259,14 @@ class ChatService {
   }
 
   // Public methods for external use
+  /**
+   * Creates a new chat room associated with a specific savings group.
+   * 
+   * @param groupId - The ID of the group
+   * @param name - Display name for the chat room
+   * @param description - Optional room description
+   * @returns Promise resolving to the created chat room
+   */
   public async createChatRoom(groupId: string, name: string, description?: string) {
     const chatRoom = await prisma.chatRoom.create({
       data: {
@@ -266,6 +280,13 @@ class ChatService {
     return chatRoom
   }
 
+  /**
+   * Adds a user to a specific chat room and notifies other participants.
+   * 
+   * @param roomId - The target chat room ID
+   * @param userId - The ID of the user to add
+   * @returns Promise resolving when the participant is added
+   */
   public async addParticipant(roomId: string, userId: string) {
     const participant = await prisma.chatParticipant.upsert({
       where: {
@@ -288,6 +309,13 @@ class ChatService {
     return participant
   }
 
+  /**
+   * Removes a user from a chat room and notifies other participants.
+   * 
+   * @param roomId - The target chat room ID
+   * @param userId - The ID of the user to remove
+   * @returns Promise resolving when the participant is removed
+   */
   public async removeParticipant(roomId: string, userId: string) {
     await prisma.chatParticipant.delete({
       where: {
@@ -304,6 +332,14 @@ class ChatService {
     logger.info(`User ${userId} removed from room ${roomId}`)
   }
 
+  /**
+   * Fetches historical messages for a chat room with pagination.
+   * 
+   * @param roomId - The chat room ID
+   * @param limit - Maximum messages to retrieve (default: 50)
+   * @param before - Optional timestamp to retrieve messages older than this date
+   * @returns Promise resolving to an array of messages in ascending order
+   */
   public async getMessages(roomId: string, limit: number = 50, before?: Date) {
     const messages = await prisma.chatMessage.findMany({
       where: {
@@ -325,6 +361,14 @@ class ChatService {
     return messages.reverse() // Return in ascending order
   }
 
+  /**
+   * Modifies the content of an existing chat message and notifies participants.
+   * 
+   * @param messageId - The ID of the message to edit
+   * @param userId - ID of the user attempting the edit (for authorization)
+   * @param content - New message content
+   * @returns Promise resolving to the updated message
+   */
   public async editMessage(messageId: string, userId: string, content: string) {
     const message = await prisma.chatMessage.update({
       where: { id: messageId },
@@ -354,6 +398,13 @@ class ChatService {
     return message
   }
 
+  /**
+   * Soft-deletes a chat message by marking it with a [Deleted] placeholder.
+   * 
+   * @param messageId - The ID of the message to delete
+   * @param userId - ID of the user attempting the deletion
+   * @returns Promise resolving to the deleted message record
+   */
   public async deleteMessage(messageId: string, userId: string) {
     const message = await prisma.chatMessage.update({
       where: { id: messageId },
@@ -373,6 +424,13 @@ class ChatService {
     return message
   }
 
+  /**
+   * Updates a user's 'lastReadAt' timestamp for a specific chat room.
+   * 
+   * @param roomId - The chat room ID
+   * @param userId - The user ID
+   * @returns Promise resolving when the timestamp is updated
+   */
   public async markAsRead(roomId: string, userId: string) {
     await prisma.chatParticipant.update({
       where: {

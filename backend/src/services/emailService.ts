@@ -43,6 +43,13 @@ export class EmailService {
 
   // ── Low-level send ───────────────────────────────────────────────────────
 
+  /**
+   * Sends a generic email using the configured SendGrid provider.
+   * Automatically handles template rendering (if needed) and error logging.
+   * 
+   * @param options - Structured email details (to, subject, content)
+   * @returns Promise resolving to true if sent successfully, false otherwise
+   */
   async sendEmail(options: EmailOptions): Promise<boolean> {
     if (!this.isEnabled) {
       logger.debug('Email service disabled — SENDGRID_API_KEY not set', {
@@ -70,6 +77,13 @@ export class EmailService {
 
   // ── Typed send methods ───────────────────────────────────────────────────
 
+  /**
+   * Sends a welcome email to a newly registered user.
+   * 
+   * @param to - Recipient's email address
+   * @param name - Display name of the user
+   * @returns Promise resolving to true if sent successfully
+   */
   async sendWelcomeEmail(to: string, name: string): Promise<boolean> {
     const html = renderTemplate('welcome', {
       name,
@@ -79,6 +93,17 @@ export class EmailService {
     return this.sendEmail({ to, subject: 'Welcome to Ajo!', html })
   }
 
+  /**
+   * Sends a reminder email to a group member for an upcoming contribution.
+   * 
+   * @param to - Recipient's email address
+   * @param groupName - Name of the savings group
+   * @param amount - Contribution amount as a display string
+   * @param dueDate - Formatted due date string
+   * @param cycleNumber - The current round/cycle number
+   * @param groupId - The unique ID of the group
+   * @returns Promise resolving to true if sent successfully
+   */
   async sendContributionReminder(
     to: string,
     groupName: string,

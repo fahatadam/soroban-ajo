@@ -19,6 +19,14 @@ interface UseWebSocketReturn {
   markRead: (notificationId: string) => void
 }
 
+/**
+ * Hook to manage a real-time WebSocket connection for receiving notifications.
+ * Automatically connects/disconnects based on authentication state.
+ * Implements exponential backoff for reconnection on network failure.
+ * 
+ * @param options - Event handlers (e.g., onNotification)
+ * @returns Connection status and manual control methods
+ */
 export function useWebSocket({ onNotification }: UseWebSocketOptions = {}): UseWebSocketReturn {
   const { address, isAuthenticated } = useAuthStore()
   const socketRef = useRef<Socket | null>(null)

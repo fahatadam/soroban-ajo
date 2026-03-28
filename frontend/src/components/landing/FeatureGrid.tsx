@@ -1,0 +1,71 @@
+import React from 'react'
+
+const features = [
+  {
+    icon: '🔒',
+    title: 'Fully Transparent',
+    description: 'Every transaction is recorded on the Stellar blockchain — no hidden fees, no surprises.',
+    gradient: 'from-indigo-500 to-purple-600',
+  },
+  {
+    icon: '⚡',
+    title: 'Instant Payouts',
+    description: 'Receive your payout in seconds with Stellar\'s fast settlement network.',
+    gradient: 'from-pink-500 to-rose-600',
+  },
+  {
+    icon: '🌍',
+    title: 'Global Access',
+    description: 'Join savings groups from anywhere in the world with just a Stellar wallet.',
+    gradient: 'from-amber-500 to-orange-600',
+  },
+  {
+    icon: '🤝',
+    title: 'Community Driven',
+    description: 'Groups are governed by members — set your own rules, cycles, and contribution amounts.',
+    gradient: 'from-teal-500 to-cyan-600',
+  },
+  {
+    icon: '📊',
+    title: 'Rich Analytics',
+    description: 'Track your savings progress, group performance, and contribution history in real time.',
+    gradient: 'from-violet-500 to-purple-600',
+  },
+  {
+    icon: '🛡️',
+    title: 'Dispute Resolution',
+    description: 'Built-in arbitration system ensures fair outcomes for all group members.',
+    gradient: 'from-emerald-500 to-teal-600',
+  },
+]
+
+export const FeatureGrid: React.FC = () => (
+  <section className="py-24 px-4 bg-slate-950">
+    <div className="max-w-6xl mx-auto">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+          Everything you need to save smarter
+        </h2>
+        <p className="text-white/50 text-lg max-w-2xl mx-auto">
+          Built on Stellar blockchain with modern UX — powerful features without the complexity.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {features.map(({ icon, title, description, gradient }) => (
+          <div
+            key={title}
+            className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 group"
+          >
+            <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-2xl mb-4`}>
+              {icon}
+            </div>
+            <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
+            <p className="text-white/50 text-sm leading-relaxed">{description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)

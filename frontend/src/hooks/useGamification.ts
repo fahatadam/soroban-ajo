@@ -317,6 +317,13 @@ function setCachedData(address: string, data: GamificationData) {
   })
 }
 
+/**
+ * Hook for managing user gamification state, including levels, XP, and achievements.
+ * Currently uses mock data generation based on the user's wallet address.
+ * 
+ * @param address - Optional wallet address to seed the mock data
+ * @returns Object containing user level, XP, achievements, and leaderboard data
+ */
 export function useGamification(address?: string) {
   const cacheKey = useMemo(() => address || 'guest-address', [address])
   const [data, setData] = useState<GamificationData | null>(() => getCachedData(cacheKey))

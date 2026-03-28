@@ -36,6 +36,13 @@ export interface ABTestResult {
 }
 
 export class ABTestService {
+  /**
+   * Creates a new A/B test with specified variants, traffic allocation, and success metrics.
+   * 
+   * @param config - The laboratory configuration for the A/B test
+   * @returns Promise resolving to the newly created ABTest record
+   * @throws {Error} If variant traffic allocation does not sum to exactly 100%
+   */
   async createTest(config: ABTestConfig) {
     // Validate traffic allocation
     const totalTraffic = Object.values(config.variants).reduce((sum, v) => sum + v.traffic, 0)
@@ -59,6 +66,15 @@ export class ABTestService {
     return test
   }
 
+  /**
+   * Assigns a user to a specific variant of an active A/B test.
+   * Uses consistent hashing to ensure a user always receives the same variant.
+   * 
+   * @param userId - Unique identifier of the user to assign
+   * @param testName - Programmatic name of the A/B test
+   * @returns Promise resolving to the assigned variant name
+   * @throws {Error} If no active test is found with the given name
+   */
   async assignUser(userId: string, testName: string): Promise<string> {
     const test = await prismaAny.aBTest.findFirst({
       where: { name: testName, status: 'active' },
@@ -83,6 +99,17 @@ export class ABTestService {
     return variant
   }
 
+  /**
+   * Records a conversion event for an A/B test variant.
+   * Automatically triggers a recalculation of test results.
+   * 
+   * @param userId - Unique identifier of the user who converted
+   * @param testName - Name of the A/B test
+   * @param metric - The metric that was converted (e.g., 'click', 'purchase')
+   * @param value - Numerical value associated with the conversion (defaults to 1)
+   * @returns Promise resolving when the event is tracked and results updated
+   * @throws {Error} If the user was not previously assigned to the specified test
+   */
   async trackConversion(userId: string, testName: string, metric: string, value?: number) {
     const assignment = await this.getUserAssignment(userId, testName)
     if (!assignment) {
@@ -99,6 +126,14 @@ export class ABTestService {
     await this.updateTestResults(testName)
   }
 
+  /**
+   * Retrieves statistical results for all variants in an A/B test.
+   * Includes conversion rates, confidence intervals, and p-values if enough data exists.
+   * 
+   * @param testName - Name of the A/B test
+   * @returns Promise resolving to an array of ABTestResult objects for each variant
+   * @throws {Error} If the test is not found
+   */
   async getTestResults(testName: string): Promise<ABTestResult[]> {
     const test = await prismaAny.aBTest.findFirst({
       where: { name: testName },
@@ -127,6 +162,13 @@ export class ABTestService {
     return results
   }
 
+  /**
+   * Permanently stops an active A/B test and records the final statistical results and winner.
+   * 
+   * @param testName - Name of the A/B test to stop
+   * @returns Promise resolving when the test is status is updated to 'completed'
+   * @throws {Error} If the test is not found
+   */
   async stopTest(testName: string) {
     const test = await prismaAny.aBTest.findFirst({
       where: { name: testName },
@@ -156,6 +198,14 @@ export class ABTestService {
     logger.info('A/B test stopped', { testName, winner: winner?.variant })
   }
 
+  /**
+   * Determines which variant a user should be assigned to based on weighted traffic allocation.
+   * 
+   * @param variants - Variant configuration containing traffic weights
+   * @param userId - User identifier used for consistent hashing
+   * @returns The name of the assigned variant
+   * @internal
+   */
   private assignVariant(variants: any, userId: string): string {
     // Use consistent hashing for user assignment
     const hash = this.hashString(userId)
@@ -173,6 +223,13 @@ export class ABTestService {
     return Object.keys(variants)[0]
   }
 
+  /**
+   * Standard 32-bit hash implementation used for consistent user assignment.
+   * 
+   * @param str - Input string to hash
+   * @returns A positive 32-bit integer
+   * @internal
+   */
   private hashString(str: string): number {
     let hash = 0
     for (let i = 0; i < str.length; i++) {
@@ -183,6 +240,14 @@ export class ABTestService {
     return Math.abs(hash)
   }
 
+  /**
+   * Retrieves a user's previous assignment for a test from the analytics database.
+   * 
+   * @param userId - User ID
+   * @param testName - Test name
+   * @returns Promise resolving to the variant name or null if no previous assignment exists
+   * @internal
+   */
   private async getUserAssignment(userId: string, testName: string): Promise<string | null> {
     // Check user's previous assignment from analytics events
     const assignment = await prismaAny.analyticsEvent.findFirst({
@@ -200,6 +265,15 @@ export class ABTestService {
     return (assignment?.eventData as any)?.variant || null
   }
 
+  /**
+   * Low-level helper to log A/B test related events to the analytics system.
+   * 
+   * @param userId - User ID
+   * @param testName - Test name
+   * @param eventType - Sub-type of A/B test event (e.g., 'assigned', 'conversion')
+   * @param data - Arbitrary event data including variant and metrics
+   * @internal
+   */
   private async trackEvent(userId: string, testName: string, eventType: string, data: any) {
     await prismaAny.analyticsEvent.create({
       data: {
@@ -214,6 +288,14 @@ export class ABTestService {
     })
   }
 
+  /**
+   * Calculates conversion metrics and statistical confidence for a specific variant.
+   * 
+   * @param testName - Test name
+   * @param variant - Variant name
+   * @returns Promise resolving to computed results for the variant
+   * @internal
+   */
   private async calculateVariantResults(testName: string, variant: string): Promise<ABTestResult> {
     // Get visitors for this variant
     const visitors = await prismaAny.analyticsEvent.count({
@@ -253,6 +335,15 @@ export class ABTestService {
     }
   }
 
+  /**
+   * Computes the 95% confidence interval for a conversion rate using the Wilson score method.
+   * 
+   * @param conversions - Number of successful conversions
+   * @param visitors - Total number of visitors in the variant
+   * @param rate - Observed conversion rate
+   * @returns Object with lower and upper bounds of the confidence interval
+   * @internal
+   */
   private calculateConfidenceInterval(
     conversions: number,
     visitors: number,
@@ -277,11 +368,25 @@ export class ABTestService {
     }
   }
 
+  /**
+   * Checks if all variants have met the minimum sample size required for statistical analysis.
+   * 
+   * @param results - Array of variant results
+   * @returns true if sample sizes are sufficient
+   * @internal
+   */
   private hasSufficientData(results: ABTestResult[]): boolean {
     const minSampleSize = 100 // Minimum visitors per variant
     return results.every((r) => r.visitors >= minSampleSize)
   }
 
+  /**
+   * Identifies the winning variant by comparing conversion rates and calculating statistical significance.
+   * 
+   * @param results - Calculated results for all variants
+   * @returns The name of the winning variant or null if no clear winner is found
+   * @internal
+   */
   private determineWinner(results: ABTestResult[]): string | null {
     if (results.length < 2) {
       return null
@@ -300,6 +405,14 @@ export class ABTestService {
     return pValue < 0.05 ? winner.variant : null
   }
 
+  /**
+   * Performs a two-proportion z-test to calculate the p-value between two variants.
+   * 
+   * @param variant1 - First variant results
+   * @param variant2 - Second variant results
+   * @returns The calculated p-value
+   * @internal
+   */
   private calculatePValue(variant1: ABTestResult, variant2: ABTestResult): number {
     // Two-proportion z-test
     const p1 = variant1.conversionRate
@@ -318,11 +431,25 @@ export class ABTestService {
     return this.zScoreToPValue(zScore)
   }
 
+  /**
+   * Converts a z-score to a p-value for a two-tailed normal distribution.
+   * 
+   * @param zScore - The absolute z-score
+   * @returns The corresponding p-value
+   * @internal
+   */
   private zScoreToPValue(zScore: number): number {
     // Approximation for two-tailed test
     return 2 * (1 - this.normalCDF(Math.abs(zScore)))
   }
 
+  /**
+   * Numerical approximation of the cumulative distribution function for a normal distribution.
+   * 
+   * @param x - The value to evaluate
+   * @returns The probability that a random variable is less than x
+   * @internal
+   */
   private normalCDF(x: number): number {
     // Approximation of normal cumulative distribution function
     const a1 = 0.254829592
@@ -341,6 +468,13 @@ export class ABTestService {
     return 0.5 * (1.0 + sign * y)
   }
 
+  /**
+   * Background helper to update the interim results stored on the test record.
+   * 
+   * @param testName - Test name
+   * @returns Promise resolving when the results are updated
+   * @internal
+   */
   private async updateTestResults(testName: string): Promise<void> {
     const test = await prismaAny.aBTest.findFirst({ where: { name: testName } })
     if (!test) {
@@ -354,6 +488,11 @@ export class ABTestService {
     })
   }
 
+  /**
+   * Retrieves all A/B tests currently in an 'active' state.
+   * 
+   * @returns Promise resolving to a list of active ABTest records
+   */
   async getActiveTests() {
     return prisma.aBTest.findMany({
       where: { status: 'active' },
@@ -361,6 +500,11 @@ export class ABTestService {
     })
   }
 
+  /**
+   * Retrieves the most recent completed A/B tests.
+   * 
+   * @returns Promise resolving to a list of up to 50 completed ABTest records
+   */
   async getTestHistory() {
     return prisma.aBTest.findMany({
       where: { status: 'completed' },

@@ -27,6 +27,14 @@ function saveData(data: StoredData) {
 }
 
 export const analyticsService = {
+  /**
+   * Persists an analytics event to the local data file.
+   * Efficiently maintains a maximum of 10,000 recent events.
+   * 
+   * @param type - The category of the event (e.g., 'error', 'metric', 'user_action')
+   * @param data - Arbitrary structured data associated with the event
+   * @returns Promise resolving when the event is successfully saved
+   */
   async saveEvent(type: string, data: any): Promise<void> {
     const stored = loadData()
     stored.events.push({ type, ...data, savedAt: Date.now() })
@@ -36,6 +44,12 @@ export const analyticsService = {
     saveData(stored)
   },
 
+  /**
+   * Calculates comprehensive statistics from the recorded analytics events.
+   * Includes totals, type breakdowns, category breakdowns, and error analysis.
+   * 
+   * @returns Promise resolving to an object containing calculated statistics and recent events
+   */
   async getStats() {
     const stored = loadData()
     const events = stored.events
@@ -74,6 +88,11 @@ export const analyticsService = {
     }
   },
 
+  /**
+   * Retrieves the 100 most recent metric-type events recorded in the system.
+   * 
+   * @returns Promise resolving to an array of metric events
+   */
   async getMetrics() {
     const stored = loadData()
     return stored.events

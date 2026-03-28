@@ -47,6 +47,14 @@ const POINTS_CONFIG = {
 
 export class GamificationService {
   // Initialize user gamification profile
+  /**
+   * Initializes or retrieves the gamification profile for a user.
+   * Sets starting points to 0 and level to BRONZE.
+   * 
+   * @param walletAddress - The user's public Stellar wallet address
+   * @returns Promise resolving to the user's gamification profile
+   * @throws {Error} If initialization fails
+   */
   async initializeUserGamification(walletAddress: string) {
     try {
       return await prisma.userGamification.upsert({
@@ -67,6 +75,16 @@ export class GamificationService {
   }
 
   // Award points to user
+  /**
+   * Awards experience points to a user for a specific action.
+   * Automatically triggers a level-up check and records the activity.
+   * 
+   * @param walletAddress - The user's public wallet address
+   * @param points - Number of points to award
+   * @param reason - Descriptive reason for awarding points
+   * @returns Promise resolving to the updated gamification profile
+   * @throws {Error} If the update fails
+   */
   async awardPoints(walletAddress: string, points: number, reason: string) {
     try {
       const gamification = await prisma.userGamification.upsert({
@@ -98,6 +116,12 @@ export class GamificationService {
   }
 
   // Calculate user level based on points
+  /**
+   * Calculates the appropriate UserLevel based on total points.
+   * 
+   * @param points - Total experience points
+   * @returns The corresponding UserLevel
+   */
   calculateLevel(points: number): UserLevel {
     if (points >= LEVEL_THRESHOLDS[UserLevel.PLATINUM]) return UserLevel.PLATINUM;
     if (points >= LEVEL_THRESHOLDS[UserLevel.GOLD]) return UserLevel.GOLD;
@@ -106,6 +130,14 @@ export class GamificationService {
   }
 
   // Level up user
+  /**
+   * Updates a user's level and records a level-up activity event.
+   * 
+   * @param walletAddress - The user's public wallet address
+   * @param newLevel - The new UserLevel to assign
+   * @returns Promise resolving when the level is updated
+   * @throws {Error} If the update fails
+   */
   async levelUp(walletAddress: string, newLevel: UserLevel) {
     try {
       await prisma.userGamification.update({
@@ -128,6 +160,14 @@ export class GamificationService {
   }
 
   // Handle contribution event
+  /**
+   * Processes a contribution event for gamification purposes.
+   * Awards points, updates streaks, and checks for achievements/challenges.
+   * 
+   * @param walletAddress - The contributor's wallet address
+   * @returns Promise resolving to awarded points and current streak info
+   * @throws {Error} If processing fails
+   */
   async handleContribution(walletAddress: string) {
     try {
       const gamification = await this.initializeUserGamification(walletAddress);
@@ -173,6 +213,14 @@ export class GamificationService {
   }
 
   // Handle group completion
+  /**
+   * Processes the completion of a savings group for gamification.
+   * Awards significant points and increments the groups-completed counter.
+   * 
+   * @param walletAddress - The member's wallet address
+   * @returns Promise resolving when processing is complete
+   * @throws {Error} If processing fails
+   */
   async handleGroupCompletion(walletAddress: string) {
     try {
       await this.awardPoints(walletAddress, POINTS_CONFIG.GROUP_COMPLETE, 'completing a group');

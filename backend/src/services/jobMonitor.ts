@@ -27,9 +27,12 @@ export interface FailedJobInfo {
   attemptsMade: number
 }
 
-/**
- * Get statistics for a specific queue
- */
+  /**
+   * Retrieves high-level state statistics for a specific background job queue.
+   * 
+   * @param queueName - The unique name of the queue (e.g., 'email_queue')
+   * @returns Promise resolving to the queue statistics or null if the queue is not found
+   */
 export async function getQueueStatistics(queueName: string): Promise<QueueStats | null> {
   const stats = await getQueueStats(queueName)
   if (!stats) return null
@@ -40,9 +43,11 @@ export async function getQueueStatistics(queueName: string): Promise<QueueStats 
   }
 }
 
-/**
- * Get statistics for all queues
- */
+  /**
+   * Compiles statistics for all active background job queues in the system.
+   * 
+   * @returns Promise resolving to an array of statistics for all queues
+   */
 export async function getAllQueueStatistics(): Promise<QueueStats[]> {
   const queueNames = [EMAIL_QUEUE_NAME, PAYOUT_QUEUE_NAME, SYNC_QUEUE_NAME, NOTIFICATION_QUEUE_NAME]
   const allStats: QueueStats[] = []
@@ -57,9 +62,14 @@ export async function getAllQueueStatistics(): Promise<QueueStats[]> {
   return allStats
 }
 
-/**
- * Get failed jobs from a specific queue
- */
+  /**
+   * Fetches a paginated list of failed jobs from a specific queue.
+   * 
+   * @param queueName - The name of the target queue
+   * @param start - Pagination start index (default: 0)
+   * @param end - Pagination end index (default: 10)
+   * @returns Promise resolving to a list of failed job details
+   */
 export async function getFailedJobs(
   queueName: string, 
   start: number = 0, 
@@ -70,7 +80,7 @@ export async function getFailedJobs(
   
   const failedJobs = await queue.getFailed(start, end)
   
-  return failedJobs.map((job) => ({
+  return failedJobs.map((job: any) => ({
     id: job.id || 'unknown',
     name: job.name,
     data: job.data,
@@ -106,9 +116,13 @@ export async function getJobById(queueName: string, jobId: string): Promise<any>
   }
 }
 
-/**
- * Retry a specific failed job
- */
+  /**
+   * Re-queues a failed job for another processing attempt.
+   * 
+   * @param queueName - The name of the queue containing the job
+   * @param jobId - The unique ID of the failed job
+   * @returns Promise resolving to true if the job was successfully re-queued
+   */
 export async function retryFailedJob(queueName: string, jobId: string): Promise<boolean> {
   const queue = getQueue(queueName)
   if (!queue) return false

@@ -25,6 +25,12 @@ export class InsuranceService {
     this.sorobanService = new SorobanService()
   }
 
+  /**
+   * Retrieves the current state of a specific insurance pool from the blockchain.
+   * 
+   * @param tokenAddress - The Stellar asset/token address for the pool
+   * @returns Promise resolving to an InsurancePool object with balance and claim stats
+   */
   async getInsurancePool(tokenAddress: string): Promise<InsurancePool> {
     const args = [new StellarSdk.Address(tokenAddress).toScVal()]
     const result = await (this.sorobanService as any).simulateView('get_insurance_pool', args)
@@ -41,6 +47,19 @@ export class InsuranceService {
     }
   }
 
+  /**
+   * Initiates the filing of an insurance claim for a default event.
+   * Returns an unsigned XDR for the user to sign if not already provided.
+   * 
+   * @param claimData - The claim details
+   * @param claimData.claimant - Wallet address of the member filing the claim
+   * @param claimData.groupId - The ID of the affected group
+   * @param claimData.cycle - The cycle number where the default occurred
+   * @param claimData.defaulter - Wallet address of the defaulting member
+   * @param claimData.amount - The claim amount requested
+   * @param claimData.signedXdr - Optional already signed XDR to submit immediately
+   * @returns Promise resolving to an object containing the unsigned XDR or the submission result
+   */
   async fileClaim(claimData: {
     claimant: string
     groupId: string
@@ -71,6 +90,17 @@ export class InsuranceService {
     return { unsignedXdr }
   }
 
+  /**
+   * Processes a pending insurance claim (approve or reject).
+   * Usually performed by a system administrator or authorized DAO member.
+   * 
+   * @param processData - The processing instructions
+   * @param processData.admin - Wallet address of the administrator
+   * @param processData.claimId - The unique ID of the claim to process
+   * @param processData.approved - Whether to approve or reject the claim
+   * @param processData.signedXdr - Optional already signed XDR to submit
+   * @returns Promise resolving to the unsigned XDR or submission result
+   */
   async processClaim(processData: {
     admin: string
     claimId: string

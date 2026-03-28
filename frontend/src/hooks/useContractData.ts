@@ -60,8 +60,12 @@ interface CacheOptions {
 }
 
 /**
- * Fetch user's groups with intelligent caching.
- * Uses stable selector so consumers only re-render when groups array reference changes.
+ * Fetch all groups or a specific user's groups with multi-layer caching.
+ * Uses a stable selector to prevent unnecessary re-renders in consumers.
+ * 
+ * @param userId - Optional wallet address to filter by owner
+ * @param options - Caching and cache-busting overrides
+ * @returns Array of groups, loading state, and any fetch errors
  */
 export const useGroups = (
   userId?: string,
@@ -94,8 +98,11 @@ export const useGroups = (
 }
 
 /**
- * Fetch single group detail with caching.
- * Stable queryKey and memoized onError to avoid unnecessary re-runs.
+ * Fetch high-level group details and metadata.
+ * 
+ * @param groupId - The Soroban contract ID for the group
+ * @param options - Cache control options
+ * @returns Group detail query result
  */
 export const useGroupDetail = (groupId: string, options: CacheOptions = {}) => {
   const { useCache = true, bustCache = false } = options
@@ -182,7 +189,14 @@ export const useGroupStatus = (groupId: string, options: CacheOptions = {}) => {
 }
 
 /**
- * Fetch transaction history for a group with pagination
+ * Fetch transaction history for a group with cursor-based pagination.
+ * Each (groupId, cursor, limit) combination is cached independently to support smooth scrolling.
+ * 
+ * @param groupId - The group to fetch history for
+ * @param cursor - Pagination cursor (from previous page result)
+ * @param limit - Number of transactions to fetch per page
+ * @param options - Cache control options
+ * @returns Paginated transaction list and total count metadata
  */
 export const useTransactions = (
   groupId: string,
@@ -232,7 +246,15 @@ interface CreateGroupContext {
 }
 
 /**
- * Create group mutation with cache invalidation
+ * Mutation for creating a new savings group on the blockchain.
+ * 
+ * Includes:
+ * - OPTIMISTIC updates for the group list
+ * - AUTOMATIC cache invalidation on success
+ * - UI feedback via notifications
+ * - ERROR recovery and rollback to previous state
+ * 
+ * @returns Mutation object with trigger function and status
  */
 export const useCreateGroup = () => {
   const queryClient = useQueryClient()
@@ -514,9 +536,11 @@ export const usePrefetch = () => {
 }
 
 /**
- * Tracks re-renders and exposes performance metrics for the calling component.
- * Use to identify re-render bottlenecks and to report metrics to analytics.
- * When reportRenderCount is true, reports total render count on unmount.
+ * Advanced hook to track component performance metrics and re-renders.
+ * Data is reported to analytics for bottleneck identification.
+ * 
+ * @param options - Metrics collection and reporting overrides
+ * @returns Object with access to current render counts and historical stats
  */
 export const usePerformanceMetrics = (options: PerformanceMetricsOptions = {}) => {
   const { reportRenderCount = false, label = 'unknown' } = options

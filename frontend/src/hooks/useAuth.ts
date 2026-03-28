@@ -14,6 +14,10 @@ import { create } from 'zustand'
 
 type AuthStore = AuthState & AuthActions
 
+/**
+ * Global authentication store using Zustand.
+ * Manages user session, wallet connection state, and two-factor status.
+ */
 export const useAuthStore = create<AuthStore>((set, get) => ({
   // --- State ---
   isAuthenticated: false,
@@ -288,9 +292,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 }))
 
 /**
- * Primary hook for accessing authentication state and actions.
- * Automatically restores persisted sessions on mount and starts
- * session monitoring (idle timeout, periodic validity checks).
+ * Primary hook for accessing and managing authentication state.
+ * 
+ * Features:
+ * - RESTORES persisted sessions on mount
+ * - STARTS session monitoring (idle timeout, heartbeat)
+ * - PROVIDES login/logout actions and session metadata
+ * 
+ * @returns Object containing all auth state and action functions
  */
 export function useAuth() {
   const store = useAuthStore()

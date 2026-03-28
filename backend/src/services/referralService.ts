@@ -84,9 +84,10 @@ export class ReferralService {
   ) {}
 
   /**
-   * Generate or retrieve referral code for a user
-   * @param userId - User's wallet address
-   * @returns Referral code
+   * Generates a new unique referral code for a user, or retrieves their existing one.
+   * 
+   * @param userId - The user's wallet address
+   * @returns Promise resolving to the user's referral code
    */
   async generateReferralCode(userId: string): Promise<string> {
     // Check if user already has a referral code
@@ -113,9 +114,10 @@ export class ReferralService {
   }
 
   /**
-   * Get existing referral code for a user
-   * @param userId - User's wallet address
-   * @returns Referral code or null if not found
+   * Retrieves an existing referral code for a user if one has been generated.
+   * 
+   * @param userId - The user's wallet address
+   * @returns Promise resolving to the referral code or null if not found
    */
   async getReferralCode(userId: string): Promise<string | null> {
     const referralCode = await this.prisma.referralCode.findUnique({
@@ -159,12 +161,12 @@ export class ReferralService {
   }
 
   /**
-   * Create a referral relationship
-   * @param referrerId - User who invited (wallet address)
-   * @param refereeId - User who was invited (wallet address)
-   * @param code - Referral code used
-   * @returns Created referral record
-   * @throws Error if referral is invalid
+   * Establishes a new referral relationship between two users.
+   * Includes fraud detection checks and updates gamification stats.
+   * 
+   * @param input - The referral creation data (referrer, referee, code)
+   * @returns Promise resolving to the created referral record
+   * @throws {Error} If self-referral, duplicate referral, or invalid code
    */
   async createReferral(input: CreateReferralInput): Promise<Referral> {
     const { referrerId, refereeId, code, metadata } = input
@@ -251,8 +253,11 @@ export class ReferralService {
   }
 
   /**
-   * Mark a referral as completed (when referee makes first contribution)
-   * @param refereeId - User who was referred
+   * Marks a referral as completed and triggers reward distribution.
+   * Typically called when a referee makes their first contribution.
+   * 
+   * @param refereeId - The wallet address of the referred user
+   * @returns Promise resolving to the updated referral record or null
    */
   async completeReferral(refereeId: string): Promise<Referral | null> {
     const referral = await this.prisma.referral.findUnique({

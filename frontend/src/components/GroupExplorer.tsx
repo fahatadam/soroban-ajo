@@ -1,3 +1,10 @@
+/**
+ * @file GroupExplorer.tsx
+ * @description A comprehensive component for discovering and filtering Soroban savings groups.
+ * Provides a searchable, sortable, and paginated interface for users to explore available groups
+ * on the platform, with detailed filtering options and a group preview system.
+ */
+
 import React, { useState } from 'react'
 import { useExplore, ALL_TAGS, ExploreGroup, ExploreSortField } from '@/hooks/useExplore'
 import { GroupPreviewModal } from '@/components/GroupPreviewModal'
@@ -27,6 +34,12 @@ const sortLabels: Record<ExploreSortField, string> = {
   totalRaised: 'Total Raised',
 }
 
+/**
+ * Internal component for rendering an individual group card in the explorer grid.
+ * 
+ * @param props.group - The group data to display
+ * @param props.onClick - Callback triggered when the card is clicked to view details
+ */
 function ExploreCard({ group, onClick }: { group: ExploreGroup; onClick: () => void }) {
   const fillPercent = (group.currentMembers / group.maxMembers) * 100
   const isFull = group.currentMembers >= group.maxMembers
@@ -113,6 +126,15 @@ function ExploreCard({ group, onClick }: { group: ExploreGroup; onClick: () => v
   )
 }
 
+/**
+ * Internal component for rendering the filter panel on both desktop and mobile views.
+ * Handles state updates for various group attributes like status, amount, and tags.
+ * 
+ * @param props.filters - Current filter state from useExplore
+ * @param props.updateFilters - Method to update specific filter fields
+ * @param props.resetFilters - Method to clear all active filters
+ * @param props.onClose - Optional callback to close the panel (used for mobile drawer)
+ */
 function FilterPanel({
   filters,
   updateFilters,
@@ -296,6 +318,13 @@ function FilterPanel({
   )
 }
 
+/**
+ * The main GroupExplorer component.
+ * Integrates `useExplore` to provide a full-featured group discovery interface.
+ * Includes a search bar, responsive filter sidebar, sort toolbar, and paginated grid.
+ * 
+ * @returns {React.ReactElement} The rendered group explorer
+ */
 export const GroupExplorer: React.FC = () => {
   const {
     paginatedGroups,

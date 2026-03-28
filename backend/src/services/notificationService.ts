@@ -34,6 +34,12 @@ class NotificationService {
   // userId -> Set of socketIds on the /notifications namespace
   private userSockets = new Map<string, Set<string>>()
 
+  /**
+   * Initializes the notification service and sets up the /notifications socket namespace.
+   * Handles authentication middleware and connection lifecycle.
+   * 
+   * @param io - The Socket.IO server instance
+   */
   init(io: any) {
     this.io = io
     const ns = io.of('/notifications')
@@ -94,8 +100,13 @@ class NotificationService {
   }
 
   /**
-   * Send a notification to a specific user.
-   * If the user is offline, the notification is queued.
+   * Sends a targeted notification to a specific user.
+   * If the user is currently offline (no active sockets), the notification is queued
+   * and will be delivered upon their next connection.
+   * 
+   * @param userId - The ID of the recipient user
+   * @param payload - The notification content (type, title, message, etc.)
+   * @returns The created notification object with ID and timestamp
    */
   sendToUser(userId: string, payload: Omit<NotificationPayload, 'id' | 'timestamp'>) {
     const notification: NotificationPayload = {
@@ -126,7 +137,11 @@ class NotificationService {
   }
 
   /**
-   * Broadcast a notification to all members of a group.
+   * Broadcasts a notification to all members of a specific savings group.
+   * 
+   * @param groupId - The ID of the target group
+   * @param payload - The notification content
+   * @param excludeUserId - Optional user ID to exclude from the broadcast (e.g., the actor)
    */
   async sendToGroup(
     groupId: string,
@@ -146,7 +161,10 @@ class NotificationService {
   }
 
   /**
-   * Broadcast to all connected users (e.g. system announcements).
+   * Broadcasts a notification to ALL currently connected users globally.
+   * Useful for system-wide announcements or maintenance windows.
+   * 
+   * @param payload - The notification content
    */
   broadcast(payload: Omit<NotificationPayload, 'id' | 'timestamp'>) {
     const notification: NotificationPayload = {

@@ -1,24 +1,42 @@
-// Issue #27: Create group detail page with tabs
-// Complexity: Medium (150 pts)
-// Status: Enhanced with real member data integration and invitation system
+/**
+ * @file GroupDetailPage.tsx
+ * @description The primary dashboard page for a specific savings group.
+ * Orchestrates multiple sub-components across tabs (Overview, Members, History, Settings)
+ * and provides group-level actions like inviting members and making contributions.
+ */
 
 import React, { useState } from 'react'
 import { ContributionForm } from './ContributionForm'
 import { MemberList } from './MemberList'
-import { MemberProfileCard } from './MemberProfileCard'
 import { TransactionHistory } from './TransactionHistory'
 import InviteModal from './InviteModal'
+import { GroupHeader } from './group/GroupHeader'
+import { MemberCard } from './group/MemberCard'
+import { ContributionTimeline } from './group/ContributionTimeline'
 import { useGroupDetail, useGroupMembers } from '../hooks/useContractData'
 
-type TabKey = 'overview' | 'members' | 'history' | 'settings'
+type TabKey = 'overview' | 'members' | 'timeline' | 'settings'
 
+/**
+ * Properties for the GroupDetailPage component.
+ */
 interface GroupDetailPageProps {
+  /** The unique identifier of the group to display */
   groupId: string
+  /** Optional group name passed from parent (overridden by fetched data) */
   groupName?: string
+  /** Callback for sharing the group invite */
   onShareLink?: () => void
+  /** Callback for copying the group invite link to clipboard */
   onCopyLink?: () => void
 }
 
+/**
+ * A tabbed dashboard component for viewing and interacting with a single Ajo group.
+ * Fetches real-time group and member data from the Soroban contract.
+ * 
+ * @param props - Component properties
+ */
 export const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
   groupId,
   groupName: propGroupName,
@@ -28,11 +46,9 @@ export const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
-  // Fetch group details from smart contract
   const { data: groupDetail, isLoading: isLoadingDetail } = useGroupDetail(groupId)
   const { data: members, isLoading: isLoadingMembers } = useGroupMembers(groupId)
 
-  // Use fetched data or fallback to props
   const groupName = groupDetail?.name || propGroupName || 'Loading...'
   const groupStatus = groupDetail?.status || 'active'
   const memberCount = members?.length || 0
@@ -42,84 +58,34 @@ export const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
   const totalCollected = groupDetail?.totalCollected || 0
   const nextPayoutDate = groupDetail?.nextPayoutDate || 'TBD'
 
-  const handleShareLink = () => {
+  const handleInvite = () => {
     setIsInviteModalOpen(true)
-    if (onShareLink) {
-      onShareLink()
-    }
+    onShareLink?.()
   }
 
-  const handleCopyLink = () => {
-    if (onCopyLink) {
-      onCopyLink()
-    }
-  }
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'members', label: `Members (${memberCount})` },
+    { key: 'timeline', label: 'Timeline' },
+    { key: 'settings', label: 'Settings' },
+  ]
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-gray-100 dark:border-slate-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
-              {groupName}
-            </h2>
-            <p className="text-gray-600 dark:text-slate-400">Group ID: {groupId}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleShareLink}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Invite Members
-            </button>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 dark:bg-emerald-900/40 text-green-800 dark:text-emerald-300">
-              {isLoadingDetail ? 'Loading...' : groupStatus.charAt(0).toUpperCase() + groupStatus.slice(1)}
-            </span>
-          </div>
-        </div>
+    <div className="space-y-5">
+      {/* Redesigned header */}
+      <GroupHeader
+        groupId={groupId}
+        groupName={groupName}
+        status={groupStatus}
+        memberCount={memberCount}
+        maxMembers={maxMembers}
+        cycleLength={cycleLength}
+        contributionAmount={contributionAmount}
+        totalCollected={totalCollected}
+        isLoading={isLoadingDetail}
+        onInvite={handleInvite}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded border border-gray-100 dark:border-slate-600">
-            <p className="text-sm text-gray-600 dark:text-slate-400">Members</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-              {isLoadingMembers ? '...' : `${memberCount}/${maxMembers}`}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded border border-gray-100 dark:border-slate-600">
-            <p className="text-sm text-gray-600 dark:text-slate-400">Cycle Length</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-              {isLoadingDetail ? '...' : `${cycleLength} days`}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded border border-gray-100 dark:border-slate-600">
-            <p className="text-sm text-gray-600 dark:text-slate-400">Contribution</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-              {isLoadingDetail ? '...' : `$${contributionAmount}`}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded border border-gray-100 dark:border-slate-600">
-            <p className="text-sm text-gray-600 dark:text-slate-400">Total Collected</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-              {isLoadingDetail ? '...' : `$${totalCollected}`}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Invite Modal */}
       <InviteModal
         groupId={groupId}
         groupName={groupName}
@@ -128,76 +94,75 @@ export const GroupDetailPage: React.FC<GroupDetailPageProps> = ({
       />
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 border border-gray-100 dark:border-slate-700">
-        <div className="border-b border-gray-200 dark:border-slate-700">
-          <nav className="flex gap-4 px-6">
-            {(['overview', 'members', 'history', 'settings'] as TabKey[]).map((tab) => (
+      <div className="rounded-2xl backdrop-blur-md bg-white/5 border border-white/10 overflow-hidden">
+        <div className="border-b border-white/10">
+          <nav className="flex gap-1 px-4 pt-2">
+            {tabs.map(({ key, label }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-4 px-2 border-b-2 font-semibold transition ${activeTab === tab
-                  ? 'border-blue-600 dark:border-indigo-400 text-blue-600 dark:text-indigo-400'
-                  : 'border-transparent text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100'
-                  }`}
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`px-4 py-3 text-sm font-semibold rounded-t-lg transition-all ${
+                  activeTab === key
+                    ? 'bg-white/10 text-white border-b-2 border-indigo-400'
+                    : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+                }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {label}
               </button>
             ))}
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-5">
           {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               <div className="lg:col-span-2 space-y-4">
-                <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded border border-gray-100 dark:border-slate-600">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-slate-100">
-                    Next Payout
-                  </h3>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-indigo-400">
-                    {isLoadingDetail ? 'Loading...' : nextPayoutDate}
+                {/* Next payout card */}
+                <div className="rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 p-4">
+                  <p className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1">Next Payout</p>
+                  <p className="text-2xl font-bold text-white">
+                    {isLoadingDetail ? '...' : nextPayoutDate}
                   </p>
                 </div>
                 <TransactionHistory groupId={groupId} />
               </div>
-              <ContributionForm 
-                groupId={groupId} 
-                contributionAmount={contributionAmount}
-              />
+              <ContributionForm groupId={groupId} contributionAmount={contributionAmount} />
             </div>
           )}
 
           {activeTab === 'members' && (
-            <div className="space-y-4">
-              {/* Profile cards grid */}
-              {members && members.length > 0 ? (
+            <div>
+              {isLoadingMembers ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {members.map((member) => (
-                    <MemberProfileCard
-                      key={member.address}
-                      member={member}
-                      groupId={groupId}
-                    />
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="rounded-2xl bg-white/5 border border-white/10 p-4 h-32 animate-pulse" />
+                  ))}
+                </div>
+              ) : members && members.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {members.map((member, i) => (
+                    <MemberCard key={member.address} member={member} groupId={groupId} rank={i + 1} />
                   ))}
                 </div>
               ) : (
-                /* Fallback to table view */
                 <MemberList groupId={groupId} />
               )}
             </div>
           )}
 
-          {activeTab === 'history' && <TransactionHistory groupId={groupId} />}
+          {activeTab === 'timeline' && (
+            <div className="max-w-2xl">
+              <ContributionTimeline transactions={[]} isLoading={isLoadingDetail} />
+            </div>
+          )}
 
           {activeTab === 'settings' && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100">
-                Group Settings
-              </h3>
-              <p className="text-gray-600 dark:text-slate-400">
-                TODO: Add settings for group creator (pause group, update metadata, cancel group)
+            <div className="space-y-4 max-w-lg">
+              <h3 className="text-lg font-bold text-white">Group Settings</h3>
+              <p className="text-white/50 text-sm">
+                Settings for group creator — pause, update metadata, or cancel the group.
               </p>
-              <button className="bg-red-600 dark:bg-red-600 hover:bg-red-700 dark:hover:bg-red-500 text-white px-4 py-2 rounded transition-colors">
+              <button className="px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/30 transition-colors">
                 Cancel Group (Creator Only)
               </button>
             </div>

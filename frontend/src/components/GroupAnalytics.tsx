@@ -1,6 +1,8 @@
-// Issue #33: Create group analytics page
-// Complexity: High (200 pts)
-// Status: Placeholder - theme-aware charts (#58)
+/**
+ * @file GroupAnalytics.tsx
+ * @description Comprehensive analytics dashboard for monitoring savings group performance.
+ * Visualizes financial trends and member participation using theme-aware charts.
+ */
 
 import React from 'react'
 import {
@@ -16,13 +18,25 @@ import {
   Legend,
 } from 'recharts'
 
+/**
+ * Metadata for a specific analytics metric card.
+ */
 interface AnalyticsMetric {
+  /** Descriptive label for the metric */
   label: string
+  /** Formatted string value (e.g., "$12,500") */
   value: string
+  /** Percentage or absolute change string */
   change: string
+  /** Directional trend for styling (green for up, red for down) */
   trend: 'up' | 'down' | 'neutral'
 }
 
+/**
+ * A dashboard component that renders key performance indicators (KPIs) and trend charts.
+ * Note: Currently utilizes mock data for demonstration purposes as part of Issue #33.
+ * Supports dynamic theme switching for all Recharts visualizations.
+ */
 export const GroupAnalytics: React.FC = () => {
   const tickFill = 'var(--chart-tick)' // theme-aware via .dark in globals.css
 

@@ -12,13 +12,13 @@ const sorobanService = new SorobanService();
  * First checks database, falls back to blockchain if not found
  */
 /**
- * Get a group, preferring cache layers.  This example now layers Redis on
- * top of the existing database cache so that reads are extremely fast.
- *
- * Order of operations:
- * 1. Check Redis cache
- * 2. If miss, check PostgreSQL via dbService
- * 3. If still miss, fetch from blockchain and populate both caches
+ * Retrieves a savings group's details using a multi-layered caching strategy.
+ * Priority: 1. Redis Cache -> 2. PostgreSQL Cache -> 3. Soroban Blockchain.
+ * Populates upper cache layers on miss.
+ * 
+ * @param groupId - The unique identifier of the savings group
+ * @returns Promise resolving to the group details
+ * @throws {Error} If the group is not found on the blockchain
  */
 export async function getGroupWithCache(groupId: string) {
   const redisKey = `group:${groupId}`;
@@ -64,7 +64,15 @@ export async function getGroupWithCache(groupId: string) {
 }
 
 /**
- * Example: Cache contribution after blockchain transaction
+ * Persists a contribution record to the database cache if it doesn't already exist.
+ * Typically called after a successful blockchain transaction is detected.
+ * 
+ * @param groupId - ID of the savings group
+ * @param walletAddress - Public key of the contributor
+ * @param amount - Contribution amount in smallest units
+ * @param round - The savings cycle round number
+ * @param txHash - The blockchain transaction hash
+ * @returns Promise resolving to the contribution record
  */
 export async function recordContribution(
   groupId: string,
@@ -90,21 +98,44 @@ export async function recordContribution(
 }
 
 /**
- * Example: Get all groups (fast from cache)
+ * Retrieves all savings groups directly from the database cache.
+ * Faster than querying the blockchain for broad listings.
+ * 
+ * @returns Promise resolving to an array of all cached groups
  */
 export async function getAllGroupsFast() {
   return dbService.getAllGroups();
 }
 
 // Generic Redis helpers exposed for middleware or other services
+/**
+ * Generic helper to set a string value in the Redis cache with a TTL.
+ * 
+ * @param key - The cache key
+ * @param value - The string value to store
+ * @param ttlSeconds - Time-to-live in seconds (default: 60)
+ * @returns Promise resolving when the value is set
+ */
 export async function cacheSet(key: string, value: string, ttlSeconds = 60) {
   return redisClient.set(key, value, 'EX', ttlSeconds);
 }
 
+/**
+ * Generic helper to retrieve a string value from the Redis cache.
+ * 
+ * @param key - The cache key
+ * @returns Promise resolving to the cached string or null if not found
+ */
 export async function cacheGet(key: string): Promise<string | null> {
   return redisClient.get(key);
 }
 
+/**
+ * Generic helper to delete a key from the Redis cache.
+ * 
+ * @param key - The cache key to remove
+ * @returns Promise resolving when the key is deleted
+ */
 export async function cacheDel(key: string) {
   return redisClient.del(key);
 }

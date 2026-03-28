@@ -1,19 +1,7 @@
 /**
- * GroupStatus Component
- * 
- * Displays real-time group status information fetched from the blockchain:
- * - Current cycle number
- * - Next payout recipient
- * - Pending contributions count
- * - Total collected in current cycle
- * - Days until next payout
- * 
- * Features:
- * - Real blockchain data via useGroupStatus hook
- * - Intelligent caching (30s TTL)
- * - Loading and error states
- * - Auto-refresh capability
- * - Responsive design
+ * @file GroupStatus.tsx
+ * @description Real-time status dashboard for a specific savings group on the blockchain.
+ * Provides live metrics including cycles, payout recipients, and contribution tracking.
  */
 
 'use client'
@@ -22,12 +10,26 @@ import React from 'react'
 import { useGroupStatus } from '@/hooks/useContractData'
 import { Icon } from './Icon'
 
+/**
+ * Props for the GroupStatus component.
+ */
 interface GroupStatusProps {
+  /** The on-chain identifier of the savings group */
   groupId: string
+  /** Optional additional CSS classes for layout customization */
   className?: string
+  /** If true, displays a button to manually re-fetch data from the chain */
   showRefreshButton?: boolean
 }
 
+/**
+ * A reactive component that displays the current operational state of a savings group.
+ * It integrates with the blockchain via a custom hook and provides:
+ * - Cycle progress tracking
+ * - Recipient address obfuscation/formatting
+ * - Financial summary of current cycle
+ * - Countdown to next payout
+ */
 export const GroupStatus: React.FC<GroupStatusProps> = ({
   groupId,
   className = '',

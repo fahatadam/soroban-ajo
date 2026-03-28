@@ -1,17 +1,13 @@
-/**
- * Profile Service
- * 
- * Handles profile data operations with localStorage as the persistence layer.
- * In a production environment with a backend, this would make HTTP requests.
- * For this blockchain-based app, we use decentralized storage.
- */
-
 import { UserProfile, UserPreferences, Activity } from '../hooks/useProfile'
 
 const STORAGE_PREFIX = 'soroban_ajo_profile_'
 const ACTIVITIES_PREFIX = 'soroban_ajo_activities_'
 const PREFERENCES_PREFIX = 'soroban_ajo_preferences_'
 
+/**
+ * Profile Service - Handles user profile management and persistence.
+ * Uses localStorage as the persistence layer in this client-side implementation.
+ */
 export class ProfileService {
   /**
    * Get profile by address
@@ -34,8 +30,12 @@ export class ProfileService {
   }
 
   /**
-   * Update profile
-   * Equivalent to: PATCH /api/profile/:address
+   * Update an existing user profile.
+   * 
+   * @param address - User's Stellar wallet address
+   * @param updates - Partial profile data to update
+   * @returns The updated profile
+   * @throws {Error} If profile is not found or update fails
    */
   static async updateProfile(
     address: string,
@@ -65,8 +65,11 @@ export class ProfileService {
   }
 
   /**
-   * Create new profile
-   * Equivalent to: POST /api/profile
+   * Initialize a new profile for a wallet address.
+   * 
+   * @param address - User's Stellar wallet address
+   * @returns The newly created or existing profile
+   * @throws {Error} If creation fails
    */
   static async createProfile(address: string): Promise<UserProfile> {
     try {
@@ -80,13 +83,11 @@ export class ProfileService {
         address,
         joinedDate: new Date().toISOString(),
         preferences: {
-          notifications: {
-            email: false,
-            push: true,
-            groupUpdates: true,
-            payoutReminders: true,
-            contributionReminders: true,
-          },
+          notifications: true,
+          emailUpdates: false,
+          theme: 'auto',
+          language: 'en',
+          currency: 'USD',
           emailNotifications: {
             enabled: false,
             frequency: 'instant',
@@ -101,16 +102,6 @@ export class ProfileService {
               groupInvitation: true,
               securityAlerts: true,
             },
-          },
-          privacy: {
-            showProfile: true,
-            showActivity: true,
-            showStats: true,
-          },
-          display: {
-            theme: 'auto',
-            language: 'en',
-            currency: 'USD',
           },
         },
         stats: {
@@ -157,8 +148,11 @@ export class ProfileService {
   }
 
   /**
-   * Add activity
-   * Equivalent to: POST /api/profile/:address/activities
+   * Log a new activity for the user.
+   * 
+   * @param address - User's Stellar wallet address
+   * @param activity - Activity details (excluding ID and timestamp)
+   * @returns The recorded activity
    */
   static async addActivity(
     address: string,
@@ -214,8 +208,12 @@ export class ProfileService {
   }
 
   /**
-   * Upload profile image to IPFS
-   * In production, this would upload to IPFS or S3
+   * Upload and process a profile image.
+   * Currently simulates an upload and returns a data URL.
+   * 
+   * @param file - Image file to upload
+   * @returns Data URL or CID of the uploaded image
+   * @throws {Error} If validation fails
    */
   static async uploadProfileImage(file: File): Promise<string> {
     try {

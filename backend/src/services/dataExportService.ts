@@ -21,6 +21,14 @@ export interface ExportRequest {
 }
 
 export class DataExportService {
+  /**
+   * Creates a background job to export complex analytics and system metrics.
+   * Supports CSV, Excel, and PDF formats.
+   * 
+   * @param userId - ID of the administrator or system user requesting the export
+   * @param request - Configuration options including specific metrics and date ranges
+   * @returns Promise resolving to the created DataExport job record
+   */
   async createExportJob(userId: string, request: ExportRequest) {
     const exportJob = await prisma.dataExport.create({
       data: {
@@ -516,6 +524,12 @@ export class DataExportService {
     })
   }
 
+  /**
+   * Deletes an export record and attempts to remove the physical file from disk.
+   * 
+   * @param exportId - Unique ID of the export to delete
+   * @returns Promise resolving to the deleted record
+   */
   async deleteExport(exportId: string) {
     const exportRecord = await prisma.dataExport.findUnique({
       where: { id: exportId },

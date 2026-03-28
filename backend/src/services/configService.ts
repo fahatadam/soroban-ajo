@@ -21,15 +21,63 @@ async function loadConfig(): Promise<Record<string, unknown>> {
   return config
 }
 
+/**
+ * Retrieves the full system configuration object.
+ * Uses a 60-second in-memory cache for performance.
+ * 
+ * @returns Promise resolving to the system configuration map
+ */
+/**
+ * Retrieves the full system configuration object.
+ * Uses a 60-second in-memory cache for performance.
+ * 
+ * @returns Promise resolving to the system configuration map
+ */
 export async function getConfig() {
   return loadConfig()
 }
 
+/**
+ * Retrieves a specific configuration value by key with an optional fallback.
+ * 
+ * @param key - The configuration key
+ * @param fallback - Optional value to return if the key is not found
+ * @returns Promise resolving to the configuration value or fallback
+ */
+/**
+ * Retrieves a specific configuration value by key with an optional fallback.
+ * 
+ * @param key - The configuration key
+ * @param fallback - Optional value to return if the key is not found
+ * @returns Promise resolving to the configuration value or fallback
+ */
 export async function getConfigValue<T = unknown>(key: string, fallback?: T): Promise<T> {
   const config = await loadConfig()
   return (config[key] ?? fallback) as T
 }
 
+/**
+ * Updates or creates a system configuration entry and records an administrative audit log.
+ * Clears the configuration cache upon successful update.
+ * 
+ * @param params - Configuration update details
+ * @param params.adminId - ID of the administrator performing the update
+ * @param params.key - The configuration key
+ * @param params.value - The new value to set
+ * @param params.description - Optional description of the configuration key
+ * @returns Promise resolving when the configuration is updated
+ */
+/**
+ * Updates or creates a system configuration entry and records an administrative audit log.
+ * Clears the configuration cache upon successful update.
+ * 
+ * @param params - Configuration update details
+ * @param params.adminId - ID of the administrator performing the update
+ * @param params.key - The configuration key
+ * @param params.value - The new value to set
+ * @param params.description - Optional description of the configuration key
+ * @returns Promise resolving when the configuration is updated
+ */
 export async function setConfig(params: {
   adminId: string
   key: string
@@ -89,6 +137,16 @@ export async function setFeeSettings(
   await setConfig({ adminId, key: 'fee_settings', value: { ...current, ...fees } })
 }
 
+/**
+ * Generates a high-level overview of system health and activity metrics.
+ * 
+ * @returns Promise resolving to the health status and key system metrics
+ */
+/**
+ * Generates a high-level overview of system health and activity metrics.
+ * 
+ * @returns Promise resolving to the health status and key system metrics
+ */
 export async function getSystemHealth() {
   const [userCount, groupCount, txCount, pendingFlags] = await Promise.all([
     prismaAny.user.count({ where: { status: 'active' } }),

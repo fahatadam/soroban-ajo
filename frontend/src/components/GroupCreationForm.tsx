@@ -1,12 +1,17 @@
-// Issue #21: Build group creation form
-// Complexity: Trivial (100 pts)
-// Status: Placeholder
+/**
+ * @file GroupCreationForm.tsx
+ * @description A multi-step form for creating new savings groups on the Soroban blockchain.
+ * Handles form state, real-time validation, draft persistence, and blockchain mutation.
+ */
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useFormDraft } from '../hooks/useFormDraft'
 import { useCreateGroup } from '../hooks/useContractData'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { StepIndicator } from './wizard/StepIndicator'
+import { WizardStep } from './wizard/WizardStep'
+import { GroupPreview } from './group/GroupPreview'
 
 interface GroupFormData {
   groupName: string
@@ -27,13 +32,26 @@ interface FormErrors {
   maxMembers?: string
 }
 
+/**
+ * Properties for the GroupCreationForm component.
+ */
 interface GroupCreationFormProps {
+  /** Optional callback triggered after successful group creation */
   onSuccess?: () => void
 }
 
+/**
+ * A comprehensive form component for creating a new Ajo savings group.
+ * Integrates with `useCreateGroup` for blockchain interaction and `useFormDraft`
+ * for preserving user input across sessions.
+ * 
+ * @param props - Component properties
+ * @returns {React.ReactElement} The rendered creation form
+ */
 export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess }) => {
   const router = useRouter()
   const createGroupMutation = useCreateGroup()
+  const [step, setStep] = useState(1)
   
   const [formData, setFormData] = useState<GroupFormData>({
     groupName: '',
@@ -77,6 +95,13 @@ export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess 
     }
   }, [errors, submitted])
 
+  /**
+   * Validates a single form field based on predefined rules.
+   * 
+   * @param name - The field name to validate
+   * @param value - The current value of the field
+   * @returns An error message string if invalid, otherwise undefined
+   */
   const validateField = (name: string, value: any): string | undefined => {
     switch (name) {
       case 'groupName':
@@ -84,32 +109,44 @@ export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess 
         if (value.trim().length < 3) return 'Group name must be at least 3 characters'
         if (value.trim().length > 100) return 'Group name must not exceed 100 characters'
         return undefined
-
       case 'description':
         if (value && value.length > 500) return 'Description must not exceed 500 characters'
         return undefined
-
       case 'cycleLength':
         if (!value) return 'Cycle length is required'
         if (value < 1) return 'Cycle length must be at least 1 day'
         if (value > 365) return 'Cycle length must not exceed 365 days'
         return undefined
-
       case 'contributionAmount':
         if (!value) return 'Contribution amount is required'
         if (value <= 0) return 'Contribution amount must be greater than 0'
         if (value > 1000000) return 'Contribution amount must not exceed 1,000,000'
         return undefined
-
       case 'maxMembers':
         if (!value) return 'Max members is required'
         if (value < 2) return 'Group must allow at least 2 members'
         if (value > 50) return 'Group cannot exceed 50 members'
         return undefined
-
       default:
         return undefined
     }
+  }
+
+  const validateStep = (s: number): boolean => {
+    const stepFields: Record<number, (keyof FormErrors)[]> = {
+      1: ['groupName', 'description'],
+      2: ['cycleLength', 'contributionAmount', 'maxMembers'],
+    }
+    const fields = stepFields[s] ?? []
+    const newErrors: FormErrors = { ...errors }
+    let valid = true
+    fields.forEach((f) => {
+      const err = validateField(f, formData[f as keyof GroupFormData])
+      if (err) { newErrors[f] = err; valid = false }
+      else delete newErrors[f]
+    })
+    setErrors(newErrors)
+    return valid
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -119,23 +156,14 @@ export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess 
     setErrors({ ...errors, [name]: error })
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    
     let processedValue: string | number = value
-    
-    // Handle numeric fields
-    if (name === 'cycleLength' || name === 'contributionAmount' || name === 'maxMembers') {
+    if (name === 'cycleLength' || name === 'contributionAmount' || name === 'maxMembers' || name === 'duration') {
       const numValue = parseFloat(value)
       processedValue = isNaN(numValue) ? 0 : numValue
     }
-    
-    setFormData({
-      ...formData,
-      [name]: processedValue,
-    })
-
-    // Clear error if field was touched and now has valid input
+    setFormData({ ...formData, [name]: processedValue })
     if (touched[name]) {
       const error = validateField(name, processedValue)
       setErrors({ ...errors, [name]: error })
@@ -154,51 +182,43 @@ export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess 
 
   const handleAddMember = () => {
     if (memberInput.trim() && !formData.invitedMembers.includes(memberInput.trim())) {
-      setFormData({
-        ...formData,
-        invitedMembers: [...formData.invitedMembers, memberInput.trim()]
-      })
+      setFormData({ ...formData, invitedMembers: [...formData.invitedMembers, memberInput.trim()] })
       setMemberInput('')
     }
   }
 
   const handleRemoveMember = (member: string) => {
-    setFormData({
-      ...formData,
-      invitedMembers: formData.invitedMembers.filter(m => m !== member)
-    })
+    setFormData({ ...formData, invitedMembers: formData.invitedMembers.filter(m => m !== member) })
   }
 
+  const handleNext = () => {
+    if (validateStep(step)) setStep((s) => s + 1)
+  }
+
+  /**
+   * Handles form submission, performing final validation and triggering the contract mutation.
+   * 
+   * @param e - Form submission event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
-
     if (!validateForm()) {
-      // Announce error to screen readers
       errorSummaryRef.current?.focus()
       return
     }
-
     try {
-      // Call create_group on Soroban contract
       const result = await createGroupMutation.mutateAsync({
         groupName: formData.groupName,
         cycleLength: formData.cycleLength,
         contributionAmount: formData.contributionAmount,
         maxMembers: formData.maxMembers,
       })
-      
-      // Clear draft on success
       removeDraft()
-      
-      // Show success message
       toast.success(`Group "${formData.groupName}" created successfully!`)
-      
-      // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess()
       } else {
-        // Redirect to group detail page
         router.push(`/groups/${result.groupId}`)
       }
     } catch (err) {
@@ -207,297 +227,150 @@ export const GroupCreationForm: React.FC<GroupCreationFormProps> = ({ onSuccess 
     }
   }
 
+  const field = (id: keyof FormErrors, label: string, input: React.ReactNode) => (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+        {label}
+      </label>
+      {input}
+      {touched[id] && errors[id] && (
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{errors[id]}</p>
+      )}
+    </div>
+  )
+
+  const inputCls = (name: keyof FormErrors) =>
+    `glass-input w-full px-4 py-3 rounded-lg transition ${touched[name] && errors[name] ? 'border-red-500' : ''}`
+
   return (
     <div className="glass-form p-8 max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-surface-900 dark:text-surface-50 mb-2">Create a New Group</h1>
-        <p className="text-surface-500 dark:text-surface-400">
-          Set up your savings group and invite members to join
-        </p>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-surface-900 dark:text-surface-50 mb-1">Create a New Group</h1>
+        <p className="text-surface-500 dark:text-surface-400">Set up your savings group and invite members to join</p>
       </div>
 
+      <StepIndicator steps={WIZARD_STEPS} currentStep={step} />
+
       {hasErrors && submitted && (
-        <div
-          ref={errorSummaryRef}
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
-          tabIndex={-1}
-        >
+        <div ref={errorSummaryRef} role="alert" aria-live="assertive" className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg" tabIndex={-1}>
           <p className="text-sm font-medium text-red-800">
             Please fix {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''} before submitting
           </p>
         </div>
       )}
 
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" noValidate>
-        {/* Group Name */}
-        <div>
-          <label htmlFor="groupName" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Group Name <span className="text-error-500">*</span>
-          </label>
-          <input
-            ref={groupNameRef}
-            id="groupName"
-            name="groupName"
-            type="text"
-            value={formData.groupName}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="e.g., Market Women Ajo"
-            className={`glass-input w-full px-4 py-3 rounded-lg transition ${
-              touched.groupName && errors.groupName ? 'border-error-500 focus:border-error-500' : ''
-            }`}
-            aria-required="true"
-            aria-invalid={touched.groupName && !!errors.groupName}
-            aria-describedby={touched.groupName && errors.groupName ? 'groupName-error' : undefined}
-            required
-          />
-          {touched.groupName && errors.groupName && (
-            <p id="groupName-error" className="mt-1 text-sm text-error-600 dark:text-error-400" role="alert">
-              {errors.groupName}
-            </p>
-          )}
-        </div>
+      <form ref={formRef} onSubmit={handleSubmit} noValidate>
+        {step === 1 && (
+          <WizardStep
+            title="Basic Information"
+            description="Give your group a name and describe its purpose"
+            onNext={handleNext}
+            canProceed={!!formData.groupName.trim() && formData.groupName.trim().length >= 3}
+          >
+            {field('groupName', 'Group Name *', (
+              <input ref={groupNameRef} id="groupName" name="groupName" type="text"
+                value={formData.groupName} onChange={handleChange} onBlur={handleBlur}
+                placeholder="e.g., Market Women Ajo" className={inputCls('groupName')}
+                aria-required="true" aria-invalid={touched.groupName && !!errors.groupName} />
+            ))}
+            {field('description', 'Description (optional)', (
+              <textarea id="description" name="description" value={formData.description}
+                onChange={handleChange} onBlur={handleBlur} rows={3}
+                placeholder="Describe your group's purpose..." className={inputCls('description')} />
+            ))}
+          </WizardStep>
+        )}
 
-        {/* Description */}
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Description <span className="text-surface-400 text-sm">(optional)</span>
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Describe your group's purpose..."
-            className={`glass-input w-full px-4 py-3 rounded-lg transition ${
-              touched.description && errors.description ? 'border-error-500' : ''
-            }`}
-            rows={3}
-            aria-invalid={touched.description && !!errors.description}
-            aria-describedby={touched.description && errors.description ? 'description-error' : undefined}
-          />
-          {touched.description && errors.description && (
-            <p id="description-error" className="mt-1 text-sm text-error-600 dark:text-error-400" role="alert">
-              {errors.description}
-            </p>
-          )}
-        </div>
-
-        {/* Cycle Length and Contribution Amount */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="cycleLength" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-              Cycle Length (days) <span className="text-error-500">*</span>
-            </label>
-            <input
-              id="cycleLength"
-              name="cycleLength"
-              type="number"
-              value={formData.cycleLength}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={`glass-input w-full px-4 py-3 rounded-lg transition ${
-                touched.cycleLength && errors.cycleLength ? 'border-error-500' : ''
-              }`}
-              min="1"
-              max="365"
-              aria-required="true"
-              aria-invalid={touched.cycleLength && !!errors.cycleLength}
-              aria-describedby={touched.cycleLength && errors.cycleLength ? 'cycleLength-error' : undefined}
-              required
-            />
-            {touched.cycleLength && errors.cycleLength && (
-              <p id="cycleLength-error" className="mt-1 text-sm text-error-600 dark:text-error-400" role="alert">
-                {errors.cycleLength}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="contributionAmount" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-              Contribution Amount ($) <span className="text-error-500">*</span>
-            </label>
-            <input
-              id="contributionAmount"
-              name="contributionAmount"
-              type="number"
-              step="0.01"
-              value={formData.contributionAmount}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={`glass-input w-full px-4 py-3 rounded-lg transition ${
-                touched.contributionAmount && errors.contributionAmount ? 'border-error-500' : ''
-              }`}
-              min="0"
-              max="1000000"
-              aria-required="true"
-              aria-invalid={touched.contributionAmount && !!errors.contributionAmount}
-              aria-describedby={touched.contributionAmount && errors.contributionAmount ? 'contributionAmount-error' : undefined}
-              required
-            />
-            {touched.contributionAmount && errors.contributionAmount && (
-              <p id="contributionAmount-error" className="mt-1 text-sm text-error-600 dark:text-error-400" role="alert">
-                {errors.contributionAmount}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Max Members */}
-        <div>
-          <label htmlFor="maxMembers" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Max Members <span className="text-error-500">*</span>
-          </label>
-          <input
-            id="maxMembers"
-            name="maxMembers"
-            type="number"
-            value={formData.maxMembers}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={`glass-input w-full px-4 py-3 rounded-lg transition ${
-              touched.maxMembers && errors.maxMembers ? 'border-error-500' : ''
-            }`}
-            min="2"
-            max="50"
-            aria-required="true"
-            aria-invalid={touched.maxMembers && !!errors.maxMembers}
-            aria-describedby={touched.maxMembers && errors.maxMembers ? 'maxMembers-error' : undefined}
-            required
-          />
-          {touched.maxMembers && errors.maxMembers && (
-            <p id="maxMembers-error" className="mt-1 text-sm text-error-600 dark:text-error-400" role="alert">
-              {errors.maxMembers}
-            </p>
-          )}
-        </div>
-
-        {/* Frequency and Duration */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="frequency" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-              Frequency
-            </label>
-            <select
-              id="frequency"
-              value={formData.frequency}
-              onChange={(e) =>
-                setFormData({ ...formData, frequency: e.target.value as 'weekly' | 'monthly' })
-              }
-              className="glass-input w-full px-4 py-3 rounded-lg"
-              required
-            >
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-              Duration (cycles)
-            </label>
-            <input
-              id="duration"
-              type="number"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-              min="1"
-              className="glass-input w-full px-4 py-3 rounded-lg"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Invite Members */}
-        <div>
-          <label htmlFor="memberInput" className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-            Invite Members <span className="text-surface-400 text-sm">(optional)</span>
-          </label>
-          <div className="flex gap-2 mb-3">
-            <input
-              id="memberInput"
-              type="text"
-              value={memberInput}
-              onChange={(e) => setMemberInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMember())}
-              placeholder="Enter wallet address or email"
-              className="glass-input flex-1 px-4 py-3 rounded-lg"
-            />
-            <button
-              type="button"
-              onClick={handleAddMember}
-              className="px-6 py-3 glass-card-subtle hover:glass-card-interactive text-surface-700 dark:text-surface-300 font-medium rounded-lg transition"
-            >
-              Add
-            </button>
-          </div>
-          {formData.invitedMembers.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.invitedMembers.map((member) => (
-                <span
-                  key={member}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 glass-card-subtle text-primary-700 dark:text-primary-300 rounded-lg text-sm"
-                >
-                  {member}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMember(member)}
-                    className="hover:text-primary-900 dark:hover:text-primary-100 font-bold"
-                    aria-label={`Remove ${member}`}
-                  >
-                    ×
-                  </button>
-                </span>
+        {step === 2 && (
+          <WizardStep
+            title="Group Settings"
+            description="Configure contribution rules and schedule"
+            onBack={() => setStep(1)}
+            onNext={handleNext}
+            canProceed={!errors.cycleLength && !errors.contributionAmount && !errors.maxMembers}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {field('cycleLength', 'Cycle Length (days) *', (
+                <input id="cycleLength" name="cycleLength" type="number" min="1" max="365"
+                  value={formData.cycleLength} onChange={handleChange} onBlur={handleBlur}
+                  className={inputCls('cycleLength')} aria-required="true" />
+              ))}
+              {field('contributionAmount', 'Contribution Amount ($) *', (
+                <input id="contributionAmount" name="contributionAmount" type="number" step="0.01" min="0"
+                  value={formData.contributionAmount} onChange={handleChange} onBlur={handleBlur}
+                  className={inputCls('contributionAmount')} aria-required="true" />
               ))}
             </div>
-          )}
-        </div>
+            {field('maxMembers', 'Max Members *', (
+              <input id="maxMembers" name="maxMembers" type="number" min="2" max="50"
+                value={formData.maxMembers} onChange={handleChange} onBlur={handleBlur}
+                className={inputCls('maxMembers')} aria-required="true" />
+            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="frequency" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Frequency</label>
+                <select id="frequency" name="frequency" value={formData.frequency} onChange={handleChange}
+                  className="glass-input w-full px-4 py-3 rounded-lg">
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="duration" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Duration (cycles)</label>
+                <input id="duration" name="duration" type="number" min="1"
+                  value={formData.duration} onChange={handleChange}
+                  className="glass-input w-full px-4 py-3 rounded-lg" />
+              </div>
+            </div>
+          </WizardStep>
+        )}
 
-        {/* Summary Card */}
-        <div className="glass-card glass-card-primary rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-4">Summary</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Group Name:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1">{formData.groupName || '—'}</p>
+        {step === 3 && (
+          <WizardStep
+            title="Invite Members"
+            description="Add wallet addresses to invite (optional)"
+            onBack={() => setStep(2)}
+            onNext={handleNext}
+          >
+            <div className="flex gap-2">
+              <input type="text" value={memberInput} onChange={(e) => setMemberInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMember())}
+                placeholder="Enter wallet address or email"
+                className="glass-input flex-1 px-4 py-3 rounded-lg" />
+              <button type="button" onClick={handleAddMember}
+                className="px-5 py-3 glass-card-subtle hover:glass-card-interactive text-surface-700 dark:text-surface-300 font-medium rounded-lg transition">
+                Add
+              </button>
             </div>
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Frequency:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1 capitalize">{formData.frequency}</p>
-            </div>
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Contribution:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1">${formData.contributionAmount}</p>
-            </div>
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Max Members:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1">{formData.maxMembers}</p>
-            </div>
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Duration:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1">{formData.duration} cycles</p>
-            </div>
-            <div>
-              <span className="text-surface-500 dark:text-surface-400">Invited:</span>
-              <p className="font-medium text-surface-900 dark:text-surface-100 mt-1">{formData.invitedMembers.length} members</p>
-            </div>
-          </div>
-        </div>
+            {formData.invitedMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {formData.invitedMembers.map((m) => (
+                  <span key={m} className="inline-flex items-center gap-2 px-3 py-1.5 glass-card-subtle text-primary-700 dark:text-primary-300 rounded-lg text-sm">
+                    {m}
+                    <button type="button" onClick={() => handleRemoveMember(m)} aria-label={`Remove ${m}`} className="font-bold hover:text-red-500">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {formData.invitedMembers.length === 0 && (
+              <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-4">No members added yet. You can skip this step.</p>
+            )}
+          </WizardStep>
+        )}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          aria-busy={loading}
-          aria-label={loading ? 'Creating group, please wait' : 'Create group'}
-        >
-          {loading ? 'Creating Group...' : 'Create Group'}
-        </button>
+        {step === 4 && (
+          <WizardStep
+            title="Review & Create"
+            description="Confirm your group details before creating"
+            onBack={() => setStep(3)}
+            onNext={() => {}}
+            nextLabel={loading ? 'Creating...' : 'Create Group'}
+            isLastStep
+            isLoading={loading}
+          >
+            <GroupPreview data={formData} />
+          </WizardStep>
+        )}
       </form>
     </div>
   )

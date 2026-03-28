@@ -1,7 +1,3 @@
-/**
- * KYC Service - wraps calls to the backend KYC endpoints.
- */
-
 import { ApiError, nextApiClient } from '@/lib/apiClient'
 import { apiPaths } from '@/lib/apiEndpoints'
 
@@ -24,7 +20,15 @@ function errorMessageFromApi(e: unknown, fallback: string): string {
   return fallback
 }
 
+/**
+ * KYC Service - Handles interaction with backend KYC verification endpoints.
+ */
 export class KycService {
+  /**
+   * Get the current KYC status for the logged-in user.
+   * 
+   * @returns The user's KYC status details
+   */
   static async getStatus(): Promise<KycStatusResponse['status']> {
     const data = await nextApiClient.request<KycStatusResponse>({
       path: apiPaths.kyc.status,
@@ -33,6 +37,11 @@ export class KycService {
     return data.status
   }
 
+  /**
+   * Submit a request for KYC verification.
+   * 
+   * @throws {Error} If the request fails
+   */
   static async requestVerification(): Promise<void> {
     try {
       await nextApiClient.request({
@@ -44,6 +53,13 @@ export class KycService {
     }
   }
 
+  /**
+   * Upload a KYC document for verification.
+   * 
+   * @param docType - Type of document (e.g., 'ID', 'ADDRESS')
+   * @param data - Base64 encoded document data
+   * @throws {Error} If the upload fails
+   */
   static async uploadDocument(docType: string, data: string): Promise<void> {
     try {
       await nextApiClient.request({

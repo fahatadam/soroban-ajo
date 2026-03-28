@@ -1,5 +1,11 @@
 import { useNotifications } from '@/hooks/useNotifications';
 
+/**
+ * Helper hook to generate standardized notification payloads for common group events.
+ * Automatically checks user preferences before adding notifications to the store.
+ * 
+ * @returns Object with methods to generate various notification types
+ */
 export function useNotificationGenerator() {
   const { addNotification, preferences } = useNotifications();
 

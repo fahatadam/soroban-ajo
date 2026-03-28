@@ -20,18 +20,17 @@ export class ActivityService {
   // ── Record a new activity event ────────────────────────────────────────────
 
   /**
-   * Persist an activity record to the database.
-   * Call this from other services (contributions, groups, disputes, etc.)
-   * whenever a meaningful action occurs.
-   *
-   * Example:
-   *   await activityService.record({
-   *     eventType: "contribution.made",
-   *     actor:     { userId, displayName, walletAddress },
-   *     groupId,
-   *     metadata:  { amount: "50", currency: "XLM", contributionRound: 3 },
-   *     txHash,
-   *   });
+   * Persists a new activity record to the database.
+   * This method should be called by other service modules (e.g., contributions, groups, disputes)
+   * whenever a significant event occurs that should be reflected in the activity feed.
+   * 
+   * @param params - The activity details to record
+   * @param params.eventType - Categorized type of the activity (e.g., 'contribution.made')
+   * @param params.actor - Information about the user performing the action
+   * @param params.groupId - The ID of the group where the activity took place
+   * @param params.metadata - Optional structured data specific to the event type
+   * @param params.txHash - Optional blockchain transaction hash associated with the event
+   * @returns Promise resolving to the created ActivityRecord
    */
   async record(params: {
     eventType: ActivityEventType;
@@ -78,13 +77,18 @@ export class ActivityService {
   // ── Query the feed ─────────────────────────────────────────────────────────
 
   /**
-   * Fetch a paginated activity feed.
-   *
-   * Supports filtering by:
-   *  - groupId     — all activity for a specific group
-   *  - userId      — activity by or directly involving a specific user
-   *  - eventTypes  — filter to a subset of event types
-   *  - before/after cursor (ISO-8601) — for efficient keyset pagination
+   * Fetches a paginated list of activity records based on the provided query filters.
+   * Supports filtering by group, user, and event types with keyset-style pagination.
+   * 
+   * @param query - The filtering and pagination parameters
+   * @param query.groupId - Filter by specific savings group
+   * @param query.userId - Filter by specific user (actor)
+   * @param query.eventTypes - Array of event types to include
+   * @param query.limit - Maximum number of records to return (default: 20, max: 100)
+   * @param query.page - Page number for pagination
+   * @param query.before - Get records created before this ISO-8601 timestamp
+   * @param query.after - Get records created after this ISO-8601 timestamp
+   * @returns Promise resolving to the activity list and pagination metadata
    */
   async getFeed(query: ActivityFeedQuery): Promise<ActivityFeedResponse> {
     const limit = Math.min(query.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
@@ -166,8 +170,12 @@ export class ActivityService {
     };
   }
 
-  // ── Get a single activity record ───────────────────────────────────────────
-
+  /**
+   * Retrieves a single activity record by its unique identifier.
+   * 
+   * @param id - The unique ID of the activity record
+   * @returns Promise resolving to the activity record or null if not found
+   */
   async getById(id: string): Promise<ActivityRecord | null> {
     const { rows } = await pool.query<ActivityRecord>(
       `SELECT
@@ -190,11 +198,13 @@ export class ActivityService {
     return rows[0] ?? null;
   }
 
-  // ── Get recent summary counts (for dashboard widgets) ─────────────────────
-
   /**
-   * Returns event-type counts for a group over the last N days.
-   * Useful for rendering a summary bar on the group dashboard.
+   * Generates a summary of activity event counts for a specific group over a given time period.
+   * Often used for populating dashboard widgets or analytics charts.
+   * 
+   * @param groupId - The ID of the group to summarize
+   * @param days - The lookback window in days (default: 30)
+   * @returns Promise resolving to an object mapping event types to their respective counts
    */
   async getSummary(
     groupId: string,

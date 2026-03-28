@@ -25,6 +25,10 @@ interface TourState {
   setHasCompletedTour: (completed: boolean) => void;
 }
 
+/**
+ * Core Zustand store for managing interactive product tours.
+ * Handles step sequence, visibility state, and completion status.
+ */
 export const useTourStore = create<TourState>()(
   persist(
     (set, get) => ({
@@ -75,6 +79,11 @@ export const useTourStore = create<TourState>()(
   )
 );
 
+/**
+ * Convenience hook for accessing the global tour state.
+ * 
+ * @returns The tour store state and actions
+ */
 export function useTour() {
   return useTourStore();
 }

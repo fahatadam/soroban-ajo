@@ -1,7 +1,9 @@
-// Issue #24: Implement contribution form
-// Complexity: Trivial (100 pts)
-// Status: Implemented with comprehensive validation
-// Issue #222: Added TransactionPreview modal, gas estimation, and live wallet balance
+/**
+ * @file ContributionForm.tsx
+ * @description A specialized form for members to contribute funds to a savings group.
+ * Features live wallet balance tracking, transaction simulation, and a multi-step
+ * confirmation process with fee estimation.
+ */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { TransactionPreview, TxPreviewData } from './TransactionPreview'
@@ -12,15 +14,33 @@ import { ValidationError, ContributionValidation } from '../types'
 import { useContribute } from '../hooks/useContractData'
 import { useFormDraft } from '../hooks/useFormDraft'
 
+/**
+ * Properties for the ContributionForm component.
+ */
 interface ContributionFormProps {
+  /** The unique identifier of the target savings group */
   groupId: string
+  /** The required contribution amount for the current cycle */
   contributionAmount: number
+  /** Fallback user balance if wallet data is unavailable */
   userBalance?: number
+  /** The wallet address of the user (deprecated, use address from context) */
   userAddress?: string
+  /** List of previous contributions made by the user to this group */
   existingContributions?: Array<{ date: string; amount: number }>
+  /** Human-readable name of the group for display in previews */
   groupName?: string
 }
 
+/**
+ * A form component for facilitating group contributions.
+ * Implements a "Double Confirmation" pattern:
+ * 1. User inputs amount and clicks "Contribute"
+ * 2. System runs a dry-run simulation to estimate fees and verify feasibility
+ * 3. User reviews details in a preview modal and confirms for final signing
+ * 
+ * @param props - Component properties
+ */
 export const ContributionForm: React.FC<ContributionFormProps> = ({
   groupId,
   contributionAmount,

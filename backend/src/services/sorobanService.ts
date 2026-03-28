@@ -222,8 +222,11 @@ export class SorobanService {
   // READ methods — simulation only, no fee or signature required
 
   /**
-   * Fetches every group from the contract (`get_all_groups`) and returns
-   * a paginated slice.
+   * Retrieves a paginated list of all savings groups registered in the contract.
+   * Fetches all groups via 'get_all_groups' simulation and applies in-memory pagination.
+   * 
+   * @param pagination - Pagination parameters (page, limit)
+   * @returns Promise resolving to a paginated result of Group objects
    */
   async getAllGroups(pagination: PaginationParams): Promise<PaginatedResult<Group>> {
     const scVal = await this.simulateView('get_all_groups', [])
@@ -232,7 +235,7 @@ export class SorobanService {
       return paginate([], pagination)
     }
 
-    const groups: Group[] = (scVal.vec() ?? []).map((item, i) => {
+    const groups: Group[] = (scVal.vec() ?? []).map((item: any, i: number) => {
       const raw = decodeScMap(item)
       return mapToGroup(raw, raw.id || String(i))
     })
@@ -241,8 +244,11 @@ export class SorobanService {
   }
 
   /**
-   * Fetches a single group by ID from the contract (`get_group`).
-   * Returns null when the group does not exist.
+   * Retrieves detailed information for a specific group from the blockchain.
+   * Calls the 'get_group' method on the Soroban contract.
+   * 
+   * @param groupId - The unique identifier of the group
+   * @returns Promise resolving to the Group object or null if not found
    */
   async getGroup(groupId: string): Promise<Group | null> {
     const args = [StellarSdk.nativeToScVal(groupId, { type: 'string' })]
@@ -256,7 +262,10 @@ export class SorobanService {
   }
 
   /**
-   * Fetches all members of a group from the contract (`get_group_members`).
+   * Retrieves the list of active members in a specific group.
+   * 
+   * @param groupId - The ID of the target group
+   * @returns Promise resolving to an array of GroupMember objects
    */
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
     const args = [StellarSdk.nativeToScVal(groupId, { type: 'string' })]
@@ -266,7 +275,7 @@ export class SorobanService {
       return []
     }
 
-    return (scVal.vec() ?? []).map((item) => mapToMember(decodeScMap(item)))
+    return (scVal.vec() ?? []).map((item: any) => mapToMember(decodeScMap(item)))
   }
 
   /**
@@ -284,7 +293,7 @@ export class SorobanService {
       return paginate([], pagination)
     }
 
-    const txs: GroupTransaction[] = (scVal.vec() ?? []).map((item) =>
+    const txs: GroupTransaction[] = (scVal.vec() ?? []).map((item: any) =>
       mapToTransaction(decodeScMap(item))
     )
 
@@ -305,12 +314,21 @@ export class SorobanService {
   // Secret keys NEVER leave the client. The server only handles XDR blobs.
 
   /**
-   * Creates a new Ajo group.
-   *
-   * - Without `signedXdr`: builds + simulates the transaction and returns
-   *   unsigned XDR for the client wallet to sign.
-   * - With `signedXdr`: submits it, waits for confirmation, and returns
-   *   the new group ID and transaction hash.
+   * Creates a new savings group on the blockchain.
+   * Supports a two-phase flow:
+   * 1. Without signedXdr: Builds and simulates the 'create_group' call, returns an unsigned XDR.
+   * 2. With signedXdr: Submits the signed transaction to the network and waits for confirmation.
+   * 
+   * @param groupData - Configuration for the new group
+   * @param groupData.name - Readable name of the group
+   * @param groupData.description - Short description of purpose
+   * @param groupData.contributionAmount - Amount each member must contribute per cycle (in stroops)
+   * @param groupData.frequency - Interval between cycles (e.g., 'weekly', 'monthly')
+   * @param groupData.maxMembers - Maximum capacity of the group
+   * @param groupData.adminPublicKey - Stellar address of the initiator/admin
+   * @param groupData.signedXdr - Optional signed XDR for submission
+   * @returns Promise resolving to the new group ID/txHash OR the unsigned XDR
+   * @throws {SorobanServiceError} If simulation or submission fails
    */
   async createGroup(groupData: {
     name: string
@@ -374,10 +392,12 @@ export class SorobanService {
   }
 
   /**
-   * Joins an existing group.
-   *
-   * - Without `signedXdr`: returns unsigned XDR for the wallet to sign.
-   * - With `signedXdr`: submits and returns the transaction hash.
+   * Adds a member to a savings group.
+   * 
+   * @param groupId - The ID of the group to join
+   * @param publicKey - The joiner's Stellar public key
+   * @param signedXdr - Optional signed XDR for submission
+   * @returns Promise resolving to success status and txHash OR unsigned XDR
    */
   async joinGroup(
     groupId: string,

@@ -33,11 +33,13 @@ export class FraudDetector {
   ) {}
 
   /**
-   * Comprehensive fraud check for a referral
-   * @param referrerId - User who is referring
-   * @param refereeId - User being referred
-   * @param metadata - Registration metadata
-   * @returns Fraud check result
+   * Performs a comprehensive fraud check on a new referral.
+   * Evaluates multiple risk factors including self-referral, IP matching, and bulk creation.
+   * 
+   * @param referrerId - Unique identifier of the user who shared the referral link
+   * @param refereeId - Unique identifier of the user who registered via the link
+   * @param metadata - Technical metadata captured during registration (IP, device info, etc.)
+   * @returns Promise resolving to a FraudCheckResult containing flags and bypass/block recommendation
    */
   async checkReferral(
     referrerId: string,
@@ -97,20 +99,23 @@ export class FraudDetector {
   }
 
   /**
-   * Check if referrer and referee are the same user
+   * Checks if the referrer and referee are the same user ID.
+   * 
    * @param referrerId - Referrer user ID
    * @param refereeId - Referee user ID
-   * @returns true if self-referral detected
+   * @returns Promise resolving to true if it is a self-referral attempt
    */
   async checkSelfReferral(referrerId: string, refereeId: string): Promise<boolean> {
     return referrerId === refereeId;
   }
 
   /**
-   * Check if referee's IP matches referrer's IP
+   * Verifies if the referee's IP address has been recently used by the referrer.
+   * 
    * @param referrerId - Referrer user ID
-   * @param refereeIP - Referee's IP address
-   * @returns true if IP match detected
+   * @param refereeIP - Current IP address of the referee
+   * @returns Promise resolving to true if an IP match is detected between the two users
+   * @todo Implement IP persistence and lookup logic
    */
   async checkIPMatch(referrerId: string, refereeIP: string): Promise<boolean> {
     // Get referrer's recent IP addresses from metadata
@@ -124,10 +129,12 @@ export class FraudDetector {
   }
 
   /**
-   * Check if referee's device fingerprint matches referrer's
+   * Verifies if the referee's device fingerprint matches one associated with the referrer.
+   * 
    * @param referrerId - Referrer user ID
-   * @param refereeFingerprint - Referee's device fingerprint
-   * @returns true if device match detected
+   * @param refereeFingerprint - Unique device identifier of the referee
+   * @returns Promise resolving to true if a device match is detected
+   * @todo Implement device fingerprint storage and comparison
    */
   async checkDeviceMatch(
     referrerId: string,
@@ -140,9 +147,10 @@ export class FraudDetector {
   }
 
   /**
-   * Check if too many referrals from same IP in 24 hours
-   * @param ipAddress - IP address to check
-   * @returns true if bulk creation detected
+   * Detects bulk account creation attempts by checking the referral limit for a single IP.
+   * 
+   * @param ipAddress - IP address to analyze
+   * @returns Promise resolving to true if the number of referrals from this IP exceeds the allowed threshold
    */
   async checkBulkCreation(ipAddress: string): Promise<boolean> {
     const count = await this.getIPReferralCount(ipAddress);
@@ -150,9 +158,11 @@ export class FraudDetector {
   }
 
   /**
-   * Get number of referrals from an IP in last 24 hours
-   * @param ipAddress - IP address
-   * @returns Count of referrals
+   * Retrieves the current referral count for an IP address within the tracking window from Redis.
+   * 
+   * @param ipAddress - IP address to query
+   * @returns Promise resolving to the number of referrals recorded for this IP
+   * @internal
    */
   private async getIPReferralCount(ipAddress: string): Promise<number> {
     const key = `fraud:ip:${ipAddress}`;
@@ -168,8 +178,11 @@ export class FraudDetector {
   }
 
   /**
-   * Increment IP referral count (call after creating referral)
-   * @param ipAddress - IP address
+   * Increments the referral count for a specific IP address and updates its TTL.
+   * Should be called every time a new referral registration is processed.
+   * 
+   * @param ipAddress - IP address to track
+   * @returns Promise resolving when the count is incremented
    */
   async incrementIPCount(ipAddress: string): Promise<void> {
     const key = `fraud:ip:${ipAddress}`;
@@ -178,11 +191,13 @@ export class FraudDetector {
   }
 
   /**
-   * Create a fraud flag record
-   * @param referralId - Referral ID
-   * @param flagType - Type of fraud detected
-   * @param details - Additional details
-   * @returns Created fraud flag
+   * Creates a formal fraud flag record in the database for a suspicious referral.
+   * This triggers manual review and updates the referral status to 'FLAGGED'.
+   * 
+   * @param referralId - ID of the flagged referral
+   * @param flagType - Type of suspicious activity detected (e.g., 'SELF_REFERRAL')
+   * @param details - Additional context or data associated with the flag
+   * @returns Promise resolving to the newly created fraud flag record
    */
   async flagReferral(
     referralId: string,
@@ -211,10 +226,12 @@ export class FraudDetector {
   }
 
   /**
-   * Review a fraud flag
-   * @param flagId - Flag ID
-   * @param status - New status (REVIEWED, CONFIRMED, DISMISSED)
-   * @param reviewerId - Admin who reviewed
+   * Records the result of an administrative review on a fraud flag.
+   * 
+   * @param flagId - ID of the flag being reviewed
+   * @param status - The final decision (REVIEWED, CONFIRMED, or DISMISSED)
+   * @param reviewerId - ID of the admin who performed the review
+   * @returns Promise resolving when the flag status is updated
    */
   async reviewFlag(
     flagId: string,
@@ -232,9 +249,10 @@ export class FraudDetector {
   }
 
   /**
-   * Check if rewards should be blocked for a user
-   * @param userId - User ID
-   * @returns true if rewards should be blocked
+   * Determines if a user should be barred from receiving rewards based on active fraud flags.
+   * 
+   * @param userId - ID of the user to check
+   * @returns Promise resolving to true if rewards should be blocked
    */
   async shouldBlockReward(userId: string): Promise<boolean> {
     // Check if user has any pending or confirmed fraud flags
@@ -249,9 +267,11 @@ export class FraudDetector {
   }
 
   /**
-   * Determine severity based on flag type
-   * @param flagType - Type of fraud
-   * @returns Severity level
+   * Map fraud flag types to their respective risk severity levels.
+   * 
+   * @param flagType - The type of fraud detected
+   * @returns The determined severity level
+   * @internal
    */
   private determineSeverity(flagType: string): 'LOW' | 'MEDIUM' | 'HIGH' {
     const highSeverityTypes = ['SELF_REFERRAL', 'BULK_CREATION'];

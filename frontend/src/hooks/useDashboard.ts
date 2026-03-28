@@ -14,10 +14,15 @@ const ITEMS_PER_PAGE = 9
 
 // ── Dashboard stats type ──────────────────────────────────────────────────────
 
+/**
+ * Aggregated summary statistics for the user's dashboard view.
+ */
 export interface DashboardStats {
+  /** Lifetime savings in XLM across all active groups */
   totalSavingsXLM: number
   activeGroupsCount: number
   pendingContributionsCount: number
+  /** Upcoming payout events sorted by chronological proximity */
   upcomingPayouts: Array<{
     groupName: string
     daysUntil: number
@@ -70,6 +75,14 @@ function computeDashboardStats(
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Primary hook for the personal user dashboard.
+ * Merges blockchain group data with dashboard-specific filters, 
+ * pagination, and aggregated performance statistics.
+ * 
+ * @param userId - The user's wallet address to filter groups and calculate stats
+ * @returns Paginated groups, dashboard stats, and UI control actions
+ */
 export const useDashboard = (userId?: string) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')

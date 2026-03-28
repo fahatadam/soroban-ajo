@@ -1,12 +1,29 @@
+/**
+ * @file GroupPreviewModal.tsx
+ * @description Detailed preview modal for savings groups in the explorer.
+ * Provides comprehensive group statistics, creator reputation, and membership actions.
+ */
+
 import React, { useEffect } from 'react'
 import { ExploreGroup } from '@/hooks/useExplore'
 
+/**
+ * Props for the GroupPreviewModal component.
+ */
 interface GroupPreviewModalProps {
+  /** The group data object containing all display details */
   group: ExploreGroup
+  /** Callback fired when the user requests to close the modal */
   onClose: () => void
+  /** Callback fired when the user clicks the join button */
   onJoin: (groupId: string) => void
 }
 
+/**
+ * Internal component to render a star-based reputation rating.
+ * 
+ * @param props.value - Numeric rating from 0 to 5
+ */
 function StarRating({ value }: { value: number }) {
   return (
     <span className="flex items-center gap-0.5">
@@ -24,12 +41,18 @@ function StarRating({ value }: { value: number }) {
   )
 }
 
+/**
+ * UI configuration for status-based badge styling.
+ */
 const statusColors = {
   active: 'bg-green-100 text-green-800 border-green-200 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-success)] dark:border-[var(--color-border)]',
   completed: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-primary)] dark:border-[var(--color-border)]',
   paused: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-warning)] dark:border-[var(--color-border)]',
 }
 
+/**
+ * UI configuration for category-based tag styling.
+ */
 const tagColors: Record<string, string> = {
   savings: 'bg-blue-100 text-blue-700 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-text)]',
   housing: 'bg-orange-100 text-orange-700 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-text)]',
@@ -41,6 +64,15 @@ const tagColors: Record<string, string> = {
   community: 'bg-indigo-100 text-indigo-700 dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-text)]',
 }
 
+/**
+ * A comprehensive modal component that displays detailed information about a group.
+ * Features include:
+ * - Financial stats (contribution, total raised, etc.)
+ * - Member capacity progress bar
+ * - Creator reputation and stats
+ * - Interactive join button with status validation
+ * - Keyboard accessibility (Escape to close)
+ */
 export const GroupPreviewModal: React.FC<GroupPreviewModalProps> = ({ group, onClose, onJoin }) => {
   const isFull = group.currentMembers >= group.maxMembers
   const fillPercent = (group.currentMembers / group.maxMembers) * 100

@@ -14,6 +14,18 @@ export type ReportReason =
 
 export type ContentType = 'user' | 'group' | 'transaction' | 'message'
 
+/**
+ * Flags a specific piece of content for administrative review.
+ * Records the reason for flagging and initiates an audit trail.
+ * 
+ * @param params - The flagging details
+ * @param params.adminId - ID of the administrator or system process flagging the content
+ * @param params.contentType - The type of content being flagged (e.g., 'user', 'message')
+ * @param params.contentId - The unique ID of the target content
+ * @param params.reason - The reason for flagging
+ * @param params.notes - Optional additional context
+ * @returns Promise resolving to the created moderation flag record
+ */
 export async function flagContent(params: {
   adminId: string
   contentType: ContentType
@@ -43,6 +55,13 @@ export async function flagContent(params: {
   return flag
 }
 
+/**
+ * Retrieves a paginated list of moderation flags that are currently pending review.
+ * 
+ * @param page - The page number to retrieve (default: 1)
+ * @param limit - Number of records per page (default: 20)
+ * @returns Promise resolving to a paginated result containing flags and metadata
+ */
 export async function getPendingFlags(page = 1, limit = 20) {
   const [flags, total] = await Promise.all([
     prismaAny.moderationFlag.findMany({
@@ -57,6 +76,16 @@ export async function getPendingFlags(page = 1, limit = 20) {
   return { flags, total, page, pages: Math.ceil(total / limit) }
 }
 
+/**
+ * Resolves an existing moderation flag by either dismissing it or taking action.
+ * 
+ * @param params - The resolution details
+ * @param params.adminId - ID of the administrator resolving the flag
+ * @param params.flagId - The ID of the flag to resolve
+ * @param params.resolution - The outcome ('dismissed' or 'actioned')
+ * @param params.notes - Optional notes regarding the resolution
+ * @returns Promise resolving to the updated flag record
+ */
 export async function resolveFlag(params: {
   adminId: string
   flagId: string
@@ -84,6 +113,16 @@ export async function resolveFlag(params: {
   return flag
 }
 
+/**
+ * Suspends a user's account for a specified duration or indefinitely.
+ * 
+ * @param params - Suspension details
+ * @param params.adminId - ID of the administrator performing the suspension
+ * @param params.userId - ID of the user to suspend
+ * @param params.reason - Reason for the suspension
+ * @param params.durationDays - Optional number of days for the suspension
+ * @returns Promise resolving to the updated user record
+ */
 export async function suspendUser(params: {
   adminId: string
   userId: string
@@ -114,6 +153,15 @@ export async function suspendUser(params: {
   return user
 }
 
+/**
+ * Permanently bans a user's account from the platform.
+ * 
+ * @param params - Ban details
+ * @param params.adminId - ID of the administrator performing the ban
+ * @param params.userId - ID of the user to ban
+ * @param params.reason - Reason for the ban
+ * @returns Promise resolving to the updated user record
+ */
 export async function banUser(params: { adminId: string; userId: string; reason: string }) {
   const user = await prismaAny.user.update({
     where: { id: params.userId },

@@ -15,10 +15,12 @@ export class ReferralCodeGenerator {
   private static readonly MAX_COLLISION_ATTEMPTS = 10;
 
   /**
-   * Generate a random referral code of specified length
-   * @param length - Length of the code (6-12 characters)
-   * @returns Alphanumeric referral code
-   * @throws Error if length is out of valid range
+   * Generates a random referral code of specified length.
+   * Uses a character set optimized for readability (no O, 0, I, l).
+   * 
+   * @param length - Desired length of the code (default: 8)
+   * @returns A random alphanumeric string
+   * @throws {Error} If length is outside the permitted range (6-12)
    */
   static generate(length: number = this.DEFAULT_LENGTH): string {
     if (length < this.MIN_LENGTH || length > this.MAX_LENGTH) {
@@ -38,11 +40,13 @@ export class ReferralCodeGenerator {
   }
 
   /**
-   * Generate a unique referral code that doesn't exist in the database
-   * @param prisma - Prisma client instance
-   * @param length - Desired code length (default: 8)
-   * @returns Unique referral code
-   * @throws Error if unable to generate unique code after max attempts
+   * Generates a unique referral code that is guaranteed not to exist in the database.
+   * Implements a retry mechanism with exponential fallback (length increase) on collisions.
+   * 
+   * @param prisma - The Prisma ORM client instance
+   * @param length - Initial desired code length (default: 8)
+   * @returns Promise resolving to a unique referral code
+   * @throws {Error} If unable to generate a unique code after maximum retries
    */
   static async generateUnique(
     prisma: PrismaClient,
@@ -76,9 +80,11 @@ export class ReferralCodeGenerator {
   }
 
   /**
-   * Validate referral code format
-   * @param code - Code to validate
-   * @returns true if code format is valid
+   * Validates if a given string follows the referral code format rules.
+   * Checks length and character set membership.
+   * 
+   * @param code - The string to validate
+   * @returns true if the format is strictly valid, false otherwise
    */
   static isValidFormat(code: string): boolean {
     if (code.length < this.MIN_LENGTH || code.length > this.MAX_LENGTH) {

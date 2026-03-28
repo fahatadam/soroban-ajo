@@ -1,23 +1,45 @@
-// Issue #22: Create group card component
-// Complexity: Trivial (100 pts)
-// Status: Enhanced with premium styling, gradients, and animations
-// TASK: Issue #62 Added Skeleton Loading State
+/**
+ * @file GroupCard.tsx
+ * @description A premium card component for displaying a summary of a savings group.
+ * Supports multiple visual variants, status-based styling, and a skeleton loading state.
+ */
 
 import React from 'react'
 
+/**
+ * Props for the GroupCard component.
+ */
 interface GroupCardProps {
+  /** Unique identifier for the group */
   groupId?: string
+  /** Human-readable name of the group */
   groupName?: string
+  /** Current number of members who have joined */
   memberCount?: number
+  /** Maximum capacity of the group */
   maxMembers?: number
+  /** Formatted date or description of the next payout event */
   nextPayout?: string
+  /** Cumulative contribution amount for the current user or group */
   totalContributions?: number
+  /** Current operational state of the group */
   status?: 'active' | 'completed' | 'paused'
+  /** Visual layout and interaction style */
   variant?: 'default' | 'elevated' | 'outlined' | 'interactive' | 'compact' | 'spacious'
+  /** Optional click handler for navigation or selection */
   onClick?: () => void
+  /** If true, renders a placeholder skeleton instead of content */
   isLoading?: boolean
 }
 
+/**
+ * A versatile card component that represents a savings group with rich visual feedback.
+ * Features:
+ * - Dynamic color coding based on group status
+ * - Member capacity progress bar
+ * - Integrated skeleton loading state for async data fetching
+ * - Accessibility support for interactive modes
+ */
 export const GroupCard: React.FC<GroupCardProps> = ({
   groupName = '',
   memberCount = 0,

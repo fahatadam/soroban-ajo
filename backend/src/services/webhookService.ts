@@ -78,7 +78,10 @@ export class WebhookService {
   }
 
   /**
-   * Register a new webhook endpoint
+   * Registers a new external webhook endpoint to receive platform events.
+   * 
+   * @param endpoint - Configuration and target URL for the webhook
+   * @returns The newly generated unique ID for the endpoint
    */
   registerEndpoint(endpoint: Omit<WebhookEndpoint, 'id'>): string {
     const id = crypto.randomUUID()
@@ -140,11 +143,16 @@ export class WebhookService {
   }
 
   /**
-   * Trigger a webhook event
+   * Triggers a specific platform event, queuing it for delivery to all subscribed webhooks.
+   * 
+   * @param event - The type of event (e.g., 'group.created')
+   * @param data - The event-specific payload
+   * @param metadata - Optional context like groupId or transactionHash
    */
   async triggerEvent(
     event: WebhookEventType,
     data: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     metadata?: WebhookPayload['metadata']
   ): Promise<void> {
     const payload: WebhookPayload = {

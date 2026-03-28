@@ -1,4 +1,7 @@
-// backend/src/services/metricsService.ts
+/**
+ * Prometheus metrics service for tracking system performance, HTTP requests,
+ * and active connections.
+ */
 import client from 'prom-client';
 
 // Create a Registry

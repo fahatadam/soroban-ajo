@@ -7,13 +7,20 @@
 
 import type { StellarNetwork } from '../types/auth'
 
+/**
+ * Result of a successful Lobstr wallet connection.
+ */
 export interface LobstrConnectionResult {
+  /** User's Stellar public key */
   address: string
+  /** Network the wallet is connected to */
   network: StellarNetwork
 }
 
 /**
- * Checks if the user is on a mobile device where Lobstr app can be opened
+ * Checks if the user is on a mobile device where the Lobstr app can be opened.
+ * 
+ * @returns True if mobile device
  */
 export function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false
@@ -23,8 +30,10 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * Generates a Lobstr deep link for authentication
+ * Generates a Lobstr deep link for authentication.
+ * 
  * @param callbackUrl - URL to redirect back to after authentication
+ * @returns Deep link string
  */
 export function generateLobstrDeepLink(callbackUrl: string): string {
   const encodedCallback = encodeURIComponent(callbackUrl)
@@ -32,9 +41,11 @@ export function generateLobstrDeepLink(callbackUrl: string): string {
 }
 
 /**
- * Opens Lobstr wallet for authentication
- * On mobile: Opens the Lobstr app
- * On desktop: Shows instructions to use Lobstr mobile app
+ * Opens Lobstr wallet for authentication.
+ * On mobile: Opens the Lobstr app via deep link.
+ * On desktop: Rejects as the app is mobile-only (should use Vault or Freighter).
+ * 
+ * @returns Promise resolving to connection details
  */
 export async function connectLobstrWallet(): Promise<LobstrConnectionResult> {
   return new Promise((resolve, reject) => {
@@ -69,8 +80,10 @@ export async function connectLobstrWallet(): Promise<LobstrConnectionResult> {
 }
 
 /**
- * Handles the callback from Lobstr wallet
- * This should be called on the callback page
+ * Handles the callback from Lobstr wallet after deep-link authentication.
+ * Should be called on the auth callback page.
+ * 
+ * @returns Connection result or null if invalid/missing params
  */
 export function handleLobstrCallback(): LobstrConnectionResult | null {
   if (typeof window === 'undefined') return null
@@ -92,9 +105,9 @@ export function handleLobstrCallback(): LobstrConnectionResult | null {
 }
 
 /**
- * Alternative: Use Lobstr Vault for desktop users OR regular LOBSTR wallet
- * Lobstr Vault is a browser extension similar to Freighter
- * Regular LOBSTR can also inject a wallet API
+ * Connect to Lobstr using the browser extension (Vault) or injected API.
+ * 
+ * @returns Promise resolving to connection details
  */
 export async function connectLobstrVault(): Promise<LobstrConnectionResult> {
   // Check if Lobstr Vault extension is installed
@@ -142,8 +155,11 @@ export async function connectLobstrVault(): Promise<LobstrConnectionResult> {
 }
 
 /**
- * Sign a transaction with Lobstr
+ * Sign a transaction using Lobstr.
+ * Hands off to deep link on mobile or extension on desktop.
+ * 
  * @param xdr - Transaction XDR to sign
+ * @returns Promise resolving to signed XDR
  */
 export async function signWithLobstr(xdr: string): Promise<string> {
   if (isMobileDevice()) {
@@ -183,7 +199,10 @@ export async function signWithLobstr(xdr: string): Promise<string> {
 }
 
 /**
- * Validates a Stellar public key format
+ * Validates a Stellar public key format using regex.
+ * 
+ * @param address - String to validate
+ * @returns True if valid G... address
  */
 export function isValidStellarAddress(address: string): boolean {
   return /^G[A-Z2-7]{55}$/.test(address)
