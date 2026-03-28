@@ -11,9 +11,12 @@ export class AchievementTracker {
   ) {}
 
   /**
-   * Handle group creation event
-   * @param userId - User who created the group
-   * @param groupId - Created group ID
+   * Handles the event when a user creates a new savings group.
+   * Checks if this is the user's first group and unlocks the 'first_group_created' achievement if so.
+   * 
+   * @param userId - Unique identifier of the user who created the group
+   * @param groupId - Unique identifier of the newly created group
+   * @returns Promise resolving when processing is complete
    */
   async handleGroupCreation(userId: string, groupId: string): Promise<void> {
     // Check if this is user's first group
@@ -32,9 +35,12 @@ export class AchievementTracker {
   }
 
   /**
-   * Handle contribution completion event
-   * @param userId - User who made contribution
-   * @param contributionId - Contribution ID
+   * Handles the event when a user completes a contribution to a savings group.
+   * Tracks the total number of contributions and unlocks achievements like 'ten_contributions'.
+   * 
+   * @param userId - Unique identifier of the user who made the contribution
+   * @param contributionId - Unique identifier of the completed contribution
+   * @returns Promise resolving when processing is complete
    */
   async handleContributionComplete(userId: string, contributionId: string): Promise<void> {
     // Increment successful contribution count
@@ -49,10 +55,13 @@ export class AchievementTracker {
   }
 
   /**
-   * Handle cycle completion event
-   * @param userId - User who completed cycle
-   * @param groupId - Group ID
-   * @param hadLatePayment - Whether user had any late payments in this cycle
+   * Handles the event when a savings cycle is completed in a group.
+   * Updates the user's contribution streak and unlocks performance-based achievements.
+   * 
+   * @param userId - Unique identifier of the user who completed the cycle
+   * @param groupId - Unique identifier of the group where the cycle occurred
+   * @param hadLatePayment - Flag indicating if the user had any late payments during this cycle
+   * @returns Promise resolving when processing is complete
    */
   async handleCycleComplete(
     userId: string,
@@ -89,8 +98,11 @@ export class AchievementTracker {
   }
 
   /**
-   * Handle referral completion event
-   * @param referrerId - User who made the referral
+   * Handles the event when a referral is successfully completed.
+   * Tracks the number of completed referrals and unlocks community-based achievements.
+   * 
+   * @param referrerId - Unique identifier of the user who made the referral
+   * @returns Promise resolving when processing is complete
    */
   async handleReferralComplete(referrerId: string): Promise<void> {
     // Count completed referrals (where referee has made at least one contribution)
@@ -108,9 +120,14 @@ export class AchievementTracker {
   }
 
   /**
-   * Unlock an achievement for a user
-   * @param userId - User ID
-   * @param achievementId - Achievement identifier
+   * Unlocks a specific achievement for a user and records it in the database.
+   * This internal method handles duplicate prevention, database storage, activity feed creation,
+   * and reward distribution via the RewardEngine.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param achievementId - Programmatic name of the achievement to unlock
+   * @returns Promise resolving when the achievement is successfully processed
+   * @internal
    */
   private async unlockAchievement(userId: string, achievementId: string): Promise<void> {
     // Check if achievement already unlocked
@@ -162,9 +179,10 @@ export class AchievementTracker {
   }
 
   /**
-   * Get user's unlocked achievements
-   * @param userId - User ID
-   * @returns List of unlocked achievements
+   * Retrieves all achievements unlocked by a specific user.
+   * 
+   * @param userId - Unique identifier of the user
+   * @returns Promise resolving to an array of user achievement records with associated achievement details
    */
   async getUserAchievements(userId: string): Promise<any[]> {
     return this.prisma.userAchievement.findMany({
@@ -177,10 +195,12 @@ export class AchievementTracker {
   }
 
   /**
-   * Get achievement progress for a user
-   * @param userId - User ID
-   * @param achievementId - Achievement identifier
-   * @returns Progress information
+   * Calculates the current progress of a user towards a specific achievement.
+   * Useful for UI displays of progress bars and 'locked' states.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param achievementId - Programmatic name of the achievement to check
+   * @returns Promise resolving to progress details containing current value, required value, and unlock status
    */
   async getAchievementProgress(
     userId: string,

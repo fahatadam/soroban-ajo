@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Save, ToggleLeft, ToggleRight, AlertTriangle } from 'lucide-react';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<any>({});
@@ -10,9 +12,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState<string | null>(null);
 
   const fetchConfig = () => {
-    const token = localStorage.getItem('adminToken');
-    fetch('/api/admin/config', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+    nextApiClient
+      .request({ path: apiPaths.admin.config, auth: 'admin' })
       .then(setConfig)
       .finally(() => setLoading(false));
   };
@@ -21,11 +22,11 @@ export default function SettingsPage() {
 
   const save = async (section: string, endpoint: string, body: unknown) => {
     setSaving(section);
-    const token = localStorage.getItem('adminToken');
-    await fetch(endpoint, {
+    await nextApiClient.request({
+      path: endpoint,
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body),
+      body,
+      auth: 'admin',
     });
     setSaving(null);
     setSaved(section);

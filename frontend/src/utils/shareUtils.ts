@@ -1,15 +1,35 @@
+/**
+ * Create a unique, deterministic invite code for a group.
+ * 
+ * @param groupId - The group's identifier
+ * @returns Formatted invite code
+ */
 export const generateInviteCode = (groupId: string): string => {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `${groupId}-${timestamp}-${random}`;
 };
 
+/**
+ * Create a full URL invitation link for a group.
+ * 
+ * @param groupId - The group's identifier
+ * @param baseUrl - Optional override for the application origin
+ * @returns Fully qualified invite URL
+ */
 export const generateInviteLink = (groupId: string, baseUrl?: string): string => {
   const code = generateInviteCode(groupId);
   const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
   return `${base}/invite/${code}`;
 };
 
+/**
+ * Attempt to copy text to the user's clipboard.
+ * Includes a fallback for environments without `navigator.clipboard`.
+ * 
+ * @param text - String to copy
+ * @returns True if successful
+ */
 export const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
     if (navigator.clipboard && window.isSecureContext) {
@@ -39,6 +59,13 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
   }
 };
 
+/**
+ * Open the user's default email client with a pre-filled group invite.
+ * 
+ * @param groupName - Name of the savings group
+ * @param inviteLink - Invitation URL
+ * @param email - Optional recipient address
+ */
 export const shareViaEmail = (
   groupName: string,
   inviteLink: string,
@@ -79,6 +106,13 @@ export const shareViaTelegram = (groupName: string, inviteLink: string): void =>
   window.open(`https://t.me/share/url?url=${inviteLink}&text=${text}`, '_blank');
 };
 
+/**
+ * Trigger the native Web Share API if available.
+ * 
+ * @param groupName - Name of the group to share
+ * @param inviteLink - URL to share
+ * @returns True if shared successfully
+ */
 export const shareViaWebShare = async (
   groupName: string,
   inviteLink: string
@@ -186,6 +220,12 @@ export const buildMilestoneSharePayload = (
   url,
 });
 
+/**
+ * Parse an invite code to extract the base Group ID.
+ * 
+ * @param code - The full invite code
+ * @returns Object with groupId or null if invalid
+ */
 export const parseInviteCode = (code: string): { groupId: string } | null => {
   try {
     const parts = code.split('-');

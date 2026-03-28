@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserGamification, LEVEL_CONFIGS, UserLevel } from '@/types/gamification';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 interface UserProfileProps {
   walletAddress: string;
@@ -34,17 +36,16 @@ export default function UserProfile({ walletAddress, isOwnProfile = false }: Use
 
   const fetchSocialData = async () => {
     try {
-      const [followersRes, followingRes] = await Promise.all([
-        fetch('/api/achievements/followers', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      const [followersData, followingData] = await Promise.all([
+        nextApiClient.request<{ success?: boolean; data?: UserFollow[] }>({
+          path: apiPaths.achievements.followers,
+          auth: 'user',
         }),
-        fetch('/api/achievements/following', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        nextApiClient.request<{ success?: boolean; data?: UserFollow[] }>({
+          path: apiPaths.achievements.following,
+          auth: 'user',
         }),
       ]);
-
-      const followersData = await followersRes.json();
-      const followingData = await followingRes.json();
 
       if (followersData.success) setFollowers(followersData.data);
       if (followingData.success) {
@@ -61,17 +62,13 @@ export default function UserProfile({ walletAddress, isOwnProfile = false }: Use
   const handleFollow = async () => {
     try {
       const method = isFollowing ? 'DELETE' : 'POST';
-      const response = await fetch(`/api/achievements/follow/${walletAddress}`, {
+      await nextApiClient.request({
+        path: apiPaths.achievements.follow(walletAddress),
         method,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        auth: 'user',
       });
-
-      if (response.ok) {
-        setIsFollowing(!isFollowing);
-        fetchSocialData();
-      }
+      setIsFollowing(!isFollowing);
+      fetchSocialData();
     } catch (error) {
       console.error('Failed to follow/unfollow:', error);
     }

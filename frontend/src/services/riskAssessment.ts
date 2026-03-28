@@ -13,7 +13,16 @@ export interface RiskProfile {
   lastAssessment: Date
 }
 
+/**
+ * Risk Assessment Service - Evaluates user creditworthiness and calculated premiums.
+ */
 export class RiskAssessmentService {
+  /**
+   * Assess the risk profile for a user based on their historical data.
+   * 
+   * @param userId - Unique identifier for the user
+   * @returns Comprehensive risk profile
+   */
   async assessRisk(userId: string): Promise<RiskProfile> {
     // Stub implementation - returns mock data
     // TODO: Implement actual risk assessment
@@ -31,14 +40,33 @@ export class RiskAssessmentService {
     }
   }
 
+  /**
+   * Fetch the existing risk profile for a user.
+   * 
+   * @param userId - Unique identifier for the user
+   * @returns The user's risk profile
+   */
   async getRiskProfile(userId: string): Promise<RiskProfile> {
     return this.assessRisk(userId)
   }
 
+  /**
+   * Recalculate and update the risk profile for a user.
+   * 
+   * @param userId - Unique identifier for the user
+   * @returns Updated risk profile
+   */
   async updateRiskProfile(userId: string): Promise<RiskProfile> {
     return this.assessRisk(userId)
   }
 
+  /**
+   * Calculate the insurance premium for a given coverage amount.
+   * 
+   * @param riskScore - The user's risk score (0-100)
+   * @param coverageAmount - Desired coverage amount in XLM
+   * @returns Calculated premium amount
+   */
   calculatePremium(riskScore: number, coverageAmount: number): number {
     // Simple premium calculation based on risk
     const baseRate = 0.05

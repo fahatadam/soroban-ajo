@@ -35,6 +35,9 @@ interface RetryOptions {
 }
 
 // Circuit breaker state
+/**
+ * Circuit Breaker pattern to prevent cascading failures in Soroban RPC calls.
+ */
 class CircuitBreaker {
   private failures: number = 0
   private lastFailureTime: number = 0
@@ -76,6 +79,15 @@ class CircuitBreaker {
 const circuitBreaker = new CircuitBreaker()
 
 // Retry wrapper with exponential backoff and circuit breaker
+/**
+ * Wrapper for async operations with exponential backoff and circuit breaker.
+ * 
+ * @param operation - The operation to execute
+ * @param operationName - Name of the operation (for logging)
+ * @param options - Retry and backoff configuration
+ * @returns Result of the operation
+ * @throws The last error encountered if all retries fail
+ */
 async function withRetry<T>(
   operation: () => Promise<T>,
   operationName: string,
@@ -207,17 +219,73 @@ export interface CreateGroupParams {
   maxMembers: number
 }
 
+/**
+ * Core interface for interacting with Soroban smart contracts.
+ */
 export interface SorobanService {
-  // TODO: Implement contract interaction methods
+  /**
+   * Create a new savings group on the blockchain.
+   * 
+   * @param params - Group configuration
+   * @returns Transaction hash/group ID
+   */
   createGroup: (params: CreateGroupParams) => Promise<string>
+
+  /**
+   * Join an existing savings group.
+   * 
+   * @param groupId - The unique ID of the group
+   */
   joinGroup: (groupId: string) => Promise<void>
+
+  /**
+   * Make a contribution to a savings group.
+   * 
+   * @param groupId - The unique ID of the group
+   * @param amount - Amount to contribute in XLM
+   */
   contribute: (groupId: string, amount: number) => Promise<void>
+
+  /**
+   * Get the current status of a savings group.
+   * 
+   * @param groupId - The unique ID of the group
+   * @param useCache - Whether to prioritize cached data
+   */
   getGroupStatus: (groupId: string, useCache?: boolean) => Promise<any>
+
+  /**
+   * Get members of a savings group with their contribution stats.
+   * 
+   * @param groupId - The unique ID of the group
+   * @param useCache - Whether to prioritize cached data
+   */
   getGroupMembers: (groupId: string, useCache?: boolean) => Promise<any[]>
+
+  /**
+   * Get all groups a user is participating in.
+   * 
+   * @param userId - User's Stellar public key
+   * @param useCache - Whether to prioritize cached data
+   */
   getUserGroups: (userId: string, useCache?: boolean) => Promise<any[]>
+
+  /**
+   * Fetch transaction history for a savings group.
+   * 
+   * @param groupId - The unique ID of the group
+   * @param cursor - Pagination cursor
+   * @param limit - Max number of transactions to return
+   */
   getTransactions: (groupId: string, cursor?: string, limit?: number) => Promise<{ transactions: any[], nextCursor?: string }>
+
+  /** Invalidate group-specific status and members cache */
   invalidateGroupCache: (groupId: string) => void
+
+  /** Invalidate user-specific groups list cache */
   invalidateUserCache: (userId: string) => void
+
+  /** Clear all Soroban-related cache */
   clearCache: () => void
 }
 
@@ -272,6 +340,10 @@ async function cachedFetch<T>(
   return data
 }
 
+/**
+ * Initializes and returns the Soroban service implementation.
+ * Configures RPC servers, network passphrases, and contract IDs.
+ */
 export const initializeSoroban = (): SorobanService => {
   const isTestEnvironment = process.env.NODE_ENV === 'test'
 
@@ -1142,6 +1214,9 @@ export const IS_TESTNET =
 /**
  * Fetch the native XLM balance and minimum reserve for a Stellar account.
  * Throws if the account does not exist on-chain.
+ * 
+ * @param publicKey - The Stellar public key to check
+ * @returns Balance and reserve information
  */
 export async function getAccountBalanceInfo(
   publicKey: string
@@ -1207,6 +1282,7 @@ export async function getLockedBalance(_publicKey: string): Promise<number> {
  *
  * @param builtTxXdr - The XDR string of the transaction built with TransactionBuilder
  * @param expectedOutcome - Human-readable description for the preview modal
+ * @returns Simulation result with fee estimates or error
  */
 export async function simulateSorobanTransaction(
   builtTxXdr: string,
@@ -1268,6 +1344,10 @@ export async function simulateSorobanTransaction(
 /**
  * Fetch recent Horizon operations for a public key and map them to
  * the RecentTx shape used by WalletConnector's transaction tab.
+ * 
+ * @param publicKey - Valid Stellar public key
+ * @param limit - Max number of recent operations to fetch (default: 10)
+ * @returns Array of recent transactions
  */
 export async function getRecentTxHistory(
   publicKey: string,
@@ -1311,6 +1391,9 @@ export async function getRecentTxHistory(
 /**
  * Fund a testnet account via Friendbot.
  * On mainnet this always returns false.
+ * 
+ * @param publicKey - Stellar public key to fund
+ * @returns True if successfully funded
  */
 export async function fundWithFriendbot(publicKey: string): Promise<boolean> {
   if (!IS_TESTNET) return false
@@ -1328,6 +1411,9 @@ export async function fundWithFriendbot(publicKey: string): Promise<boolean> {
  * Return the "Add Funds" URL:
  * - Testnet → Friendbot page
  * - Mainnet → StellarX exchange
+ * 
+ * @param publicKey - Stellar public key
+ * @returns URL string
  */
 export function getAddFundsUrl(publicKey: string): string {
   return IS_TESTNET

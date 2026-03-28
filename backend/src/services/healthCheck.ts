@@ -28,7 +28,12 @@ email: CheckResult;
 }
 
 export class HealthCheckService {
-async checkDatabase(): Promise<CheckResult> {
+  /**
+   * Verifies the connectivity and responsiveness of the PostgreSQL database.
+   * 
+   * @returns Promise resolving to a CheckResult with status and response time
+   */
+  async checkDatabase(): Promise<CheckResult> {
     const start = Date.now();
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -44,6 +49,11 @@ async checkDatabase(): Promise<CheckResult> {
     }
   }
 
+  /**
+   * Verifies the connectivity of the Redis cache by sending a PING command.
+   * 
+   * @returns Promise resolving to a CheckResult
+   */
   async checkRedis(): Promise<CheckResult> {
     const start = Date.now();
     try {
@@ -60,6 +70,11 @@ async checkDatabase(): Promise<CheckResult> {
     }
   }
 
+  /**
+   * Validates reachability of the Stellar Horizon server by fetching recent ledgers.
+   * 
+   * @returns Promise resolving to a CheckResult
+   */
   async checkStellar(): Promise<CheckResult> {
     const start = Date.now();
     try {
@@ -77,6 +92,11 @@ async checkDatabase(): Promise<CheckResult> {
     }
   }
 
+  /**
+   * Aggregate health status of all critical system components.
+   * 
+   * @returns Promise resolving to a comprehensive HealthStatus report
+   */
   async getHealthStatus(): Promise<HealthStatus> {
     const [database, redis, stellar] = await Promise.all([
       this.checkDatabase(),

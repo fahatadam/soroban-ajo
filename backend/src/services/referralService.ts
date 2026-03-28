@@ -1,6 +1,9 @@
-import { PrismaClient, Referral } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { ReferralCodeGenerator } from '../utils/ReferralCodeGenerator'
 import type { ReferralMetadata } from './FraudDetector'
+
+// Local type alias since Referral model may not be in the generated Prisma client
+type Referral = Record<string, any>
 
 export interface ReferralRewardDistributor {
   distributeReferralReward(referrerId: string, refereeId: string): Promise<void>
@@ -81,9 +84,10 @@ export class ReferralService {
   ) {}
 
   /**
-   * Generate or retrieve referral code for a user
-   * @param userId - User's wallet address
-   * @returns Referral code
+   * Generates a new unique referral code for a user, or retrieves their existing one.
+   * 
+   * @param userId - The user's wallet address
+   * @returns Promise resolving to the user's referral code
    */
   async generateReferralCode(userId: string): Promise<string> {
     // Check if user already has a referral code
@@ -110,9 +114,10 @@ export class ReferralService {
   }
 
   /**
-   * Get existing referral code for a user
-   * @param userId - User's wallet address
-   * @returns Referral code or null if not found
+   * Retrieves an existing referral code for a user if one has been generated.
+   * 
+   * @param userId - The user's wallet address
+   * @returns Promise resolving to the referral code or null if not found
    */
   async getReferralCode(userId: string): Promise<string | null> {
     const referralCode = await this.prisma.referralCode.findUnique({
@@ -156,12 +161,12 @@ export class ReferralService {
   }
 
   /**
-   * Create a referral relationship
-   * @param referrerId - User who invited (wallet address)
-   * @param refereeId - User who was invited (wallet address)
-   * @param code - Referral code used
-   * @returns Created referral record
-   * @throws Error if referral is invalid
+   * Establishes a new referral relationship between two users.
+   * Includes fraud detection checks and updates gamification stats.
+   * 
+   * @param input - The referral creation data (referrer, referee, code)
+   * @returns Promise resolving to the created referral record
+   * @throws {Error} If self-referral, duplicate referral, or invalid code
    */
   async createReferral(input: CreateReferralInput): Promise<Referral> {
     const { referrerId, refereeId, code, metadata } = input
@@ -248,8 +253,11 @@ export class ReferralService {
   }
 
   /**
-   * Mark a referral as completed (when referee makes first contribution)
-   * @param refereeId - User who was referred
+   * Marks a referral as completed and triggers reward distribution.
+   * Typically called when a referee makes their first contribution.
+   * 
+   * @param refereeId - The wallet address of the referred user
+   * @returns Promise resolving to the updated referral record or null
    */
   async completeReferral(refereeId: string): Promise<Referral | null> {
     const referral = await this.prisma.referral.findUnique({
@@ -325,10 +333,10 @@ export class ReferralService {
     })
 
     const totalReferrals = referrals.length
-    const activeReferrals = referrals.filter((r) => r.status === 'ACTIVE').length
-    const pendingReferrals = referrals.filter((r) => r.status === 'PENDING').length
-    const completedReferrals = referrals.filter((r) => r.status === 'COMPLETED').length
-    const flaggedReferrals = referrals.filter((r) => r.status === 'FLAGGED').length
+    const activeReferrals = referrals.filter((r: any) => r.status === 'ACTIVE').length
+    const pendingReferrals = referrals.filter((r: any) => r.status === 'PENDING').length
+    const completedReferrals = referrals.filter((r: any) => r.status === 'COMPLETED').length
+    const flaggedReferrals = referrals.filter((r: any) => r.status === 'FLAGGED').length
     const conversionRate = totalReferrals === 0 ? 0 : completedReferrals / totalReferrals
 
     return {
@@ -387,7 +395,7 @@ export class ReferralService {
 
     const statusBreakdown = ['PENDING', 'ACTIVE', 'COMPLETED', 'FLAGGED'].map((status) => ({
       status,
-      count: referrals.filter((referral) => referral.status === status).length,
+      count: referrals.filter((referral: any) => referral.status === status).length,
     }))
 
     const totalReferrals = referrals.length
@@ -432,7 +440,7 @@ export class ReferralService {
     })
 
     return Promise.all(
-      grouped.map(async (entry, index) => {
+      grouped.map(async (entry: any, index: number) => {
         const completedReferrals = await this.prisma.referral.count({
           where: {
             referrerId: entry.referrerId,

@@ -70,7 +70,7 @@ export class ChallengeService {
   }
 
   async completeChallenge(userId: string, challengeId: string): Promise<void> {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const challenge = await tx.challenge.findUnique({
         where: { id: challengeId },
       });
@@ -177,7 +177,7 @@ export class ChallengeService {
       },
     });
 
-    return challenges.map((challenge) => {
+    return challenges.map((challenge: any) => {
       const userChallenge = challenge.userChallenges[0];
       const requirement = this.parseRequirement(challenge.requirement);
 

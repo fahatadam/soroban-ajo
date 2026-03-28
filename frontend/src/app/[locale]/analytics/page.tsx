@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { nextApiClient } from "@/lib/apiClient";
+import { apiPaths } from "@/lib/apiEndpoints";
 
 interface Stats {
   totalEvents: number;
@@ -15,8 +17,10 @@ export default function AnalyticsDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/analytics/stats")
-      .then((r) => r.json())
+    nextApiClient
+      .request<Stats>({
+        path: apiPaths.analytics.stats,
+      })
       .then((data) => {
         setStats(data);
         setLoading(false);

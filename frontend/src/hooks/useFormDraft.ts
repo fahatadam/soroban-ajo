@@ -11,6 +11,14 @@ interface UseFormDraftOptions<T> {
   debounceMs?: number;
 }
 
+/**
+ * Hook to automatically persist form state to local storage.
+ * Restores unsaved changes when the user returns to the form.
+ * 
+ * @template T - Type of the form data object
+ * @param options - Configuration including storage key, current data, and restore callback
+ * @returns Object with a method to manually clear the draft
+ */
 export const useFormDraft = <T>({
   key,
   data,

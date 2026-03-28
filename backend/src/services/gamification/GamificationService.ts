@@ -281,7 +281,7 @@ export class GamificationService {
       },
     });
 
-    return leaderboard.map((entry, index) => ({
+    return leaderboard.map((entry: any, index: number) => ({
       userId: entry.userId,
       walletAddress: entry.user.walletAddress,
       points: entry.points,

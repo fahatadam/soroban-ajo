@@ -77,6 +77,19 @@ export interface EmailVerificationVars {
   verifyLink: string
 }
 
+export interface MonthlyReportVars {
+  monthOf: string
+  totalContributed: string
+  totalReceived: string
+  groupsJoined: string | number
+  groupsCompleted: string | number
+  contributionCount: string | number
+  /** Pre-rendered HTML rows for each group */
+  groupRows: string
+  dashboardUrl: string
+  unsubscribeUrl: string
+}
+
 export type TemplateVars =
   | WelcomeVars
   | ContributionReminderVars
@@ -85,6 +98,7 @@ export type TemplateVars =
   | TransactionReceiptVars
   | WeeklySummaryVars
   | EmailVerificationVars
+  | MonthlyReportVars
 
 // ── Template names ─────────────────────────────────────────────────────────
 
@@ -96,6 +110,7 @@ export type TemplateName =
   | 'transactionReceipt'
   | 'weeklySummary'
   | 'emailVerification'
+  | 'monthlyReport'
 
 const TEMPLATE_FILES: Record<TemplateName, string> = {
   welcome: 'welcome.mjml',
@@ -105,6 +120,7 @@ const TEMPLATE_FILES: Record<TemplateName, string> = {
   transactionReceipt: 'transactionReceipt.mjml',
   weeklySummary: 'weeklySummary.mjml',
   emailVerification: 'emailVerification.mjml',
+  monthlyReport: 'monthlyReport.mjml',
 }
 
 // In-memory cache of compiled HTML (keyed by template name)
@@ -159,7 +175,7 @@ function injectVars(html: string, vars: Record<string, string>): string {
  */
 export function renderTemplate(name: TemplateName, vars: TemplateVars): string {
   const html = compileTemplate(name)
-  return injectVars(html, vars as Record<string, string>)
+  return injectVars(html, vars as unknown as Record<string, string>)
 }
 
 /**

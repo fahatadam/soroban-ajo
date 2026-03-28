@@ -28,6 +28,14 @@ const DEFAULT_FILTERS: FilterState = {
 
 const STORAGE_KEY = 'ajo_group_filters';
 
+/**
+ * Hook for managing client-side filtering, searching, and sorting of group lists.
+ * Persists user filter preferences to local storage.
+ * 
+ * @param groups - The raw list of groups to filter
+ * @param userId - Optional ID of the current user (for "My Groups" filtering)
+ * @returns Object containing filter state, update methods, and the filtered data
+ */
 export const useGroupFilters = (groups: Group[], userId?: string) => {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [isLoaded, setIsLoaded] = useState(false);

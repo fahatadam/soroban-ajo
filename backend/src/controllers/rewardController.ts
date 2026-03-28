@@ -95,7 +95,7 @@ export const getRewardHistory = async (req: Request, res: Response) => {
     });
 
     const totalEarned = history.length;
-    const totalRedeemed = history.filter((r) => r.status === 'REDEEMED').length;
+    const totalRedeemed = history.filter((r: { status: string }) => r.status === 'REDEEMED').length;
 
     res.json({
       history,

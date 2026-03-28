@@ -60,6 +60,14 @@ export interface UseTableStateReturn<T> {
   hasSelection: boolean
 }
 
+/**
+ * Comprehensive hook for managing local table state.
+ * Handles pagination, client-side filtering, row selection, and sorting.
+ * 
+ * @template T - Type of the row data (must include an `id` field)
+ * @param options - Configuration including raw data and optional filter logic
+ * @returns A large object containing state and all necessary control methods for data tables
+ */
 export function useTableState<T extends Record<string, any>>({
   data,
   initialPageSize = 10,

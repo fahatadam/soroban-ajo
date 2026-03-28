@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserStats, LEVEL_CONFIGS, UserLevel } from '@/types/gamification';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 interface GamificationProps {
   walletAddress?: string;
@@ -20,13 +22,14 @@ export default function Gamification({ walletAddress }: GamificationProps) {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/achievements/stats', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      const data = await nextApiClient.request<{
+        success?: boolean;
+        data?: UserStats;
+      }>({
+        path: apiPaths.achievements.stats,
+        auth: 'user',
       });
-      const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data) {
         setStats(data.data);
       }
     } catch (error) {

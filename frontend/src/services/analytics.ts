@@ -1,4 +1,5 @@
-// Analytics and monitoring service for tracking user actions and performance
+import { nextApiClient } from '@/lib/apiClient'
+import { apiPaths } from '@/lib/apiEndpoints'
 
 export interface AnalyticsEvent {
   category: string
@@ -26,6 +27,9 @@ export interface ErrorEvent {
   timestamp: number
 }
 
+/**
+ * Analytics and monitoring service for tracking user actions and performance
+ */
 class AnalyticsService {
   private events: AnalyticsEvent[] = []
   private metrics: PerformanceMetric[] = []
@@ -60,11 +64,20 @@ class AnalyticsService {
     })
   }
 
+  /**
+   * Set the current user ID for event tracking
+   * 
+   * @param userId - The unique identifier for the user
+   */
   setUserId(userId: string) {
     this.userId = userId
   }
 
-  // Track user actions
+  /**
+   * Track a user action or system event
+   * 
+   * @param event - The event data to track (excluding auto-generated fields)
+   */
   trackEvent(event: Omit<AnalyticsEvent, 'timestamp' | 'sessionId' | 'userId'>) {
     const enrichedEvent: AnalyticsEvent = {
       ...event,
@@ -79,7 +92,13 @@ class AnalyticsService {
     this.sendToBackend('event', enrichedEvent)
   }
 
-  // Track performance metrics
+  /**
+   * Track a performance metric
+   * 
+   * @param name - Metric name
+   * @param duration - Duration in milliseconds
+   * @param metadata - Additional metric context
+   */
   trackMetric(name: string, duration: number, metadata?: Record<string, any>) {
     const metric: PerformanceMetric = {
       name,
@@ -94,7 +113,13 @@ class AnalyticsService {
     this.sendToBackend('metric', metric)
   }
 
-  // Track errors
+  /**
+   * Track an application error
+   * 
+   * @param error - The Error object or message string
+   * @param context - Additional error context
+   * @param severity - Error severity level
+   */
   trackError(error: Error | string, context?: Record<string, any>, severity: ErrorEvent['severity'] = 'medium') {
     const errorEvent: ErrorEvent = {
       message: typeof error === 'string' ? error : error.message,
@@ -117,7 +142,14 @@ class AnalyticsService {
     this.sendToBackend('error', errorEvent)
   }
 
-  // Measure function execution time
+  /**
+   * Measure the execution time of an asynchronous function
+   * 
+   * @param name - Measurement name
+   * @param fn - The async function to execute
+   * @param metadata - Additional measurement context
+   * @returns The result of the function
+   */
   async measureAsync<T>(name: string, fn: () => Promise<T>, metadata?: Record<string, any>): Promise<T> {
     const start = performance.now()
     try {
@@ -132,6 +164,14 @@ class AnalyticsService {
     }
   }
 
+  /**
+   * Measure the execution time of a synchronous function
+   * 
+   * @param name - Measurement name
+   * @param fn - The function to execute
+   * @param metadata - Additional measurement context
+   * @returns The result of the function
+   */
   measureSync<T>(name: string, fn: () => T, metadata?: Record<string, any>): T {
     const start = performance.now()
     try {
@@ -146,20 +186,36 @@ class AnalyticsService {
     }
   }
 
-  // Get analytics data for dashboards
+  /**
+   * Retrieve tracked events
+   * 
+   * @param limit - Max number of recent events to return
+   */
   getEvents(limit?: number): AnalyticsEvent[] {
     return limit ? this.events.slice(-limit) : this.events
   }
 
+  /**
+   * Retrieve tracked metrics
+   * 
+   * @param limit - Max number of recent metrics to return
+   */
   getMetrics(limit?: number): PerformanceMetric[] {
     return limit ? this.metrics.slice(-limit) : this.metrics
   }
 
+  /**
+   * Retrieve tracked errors
+   * 
+   * @param limit - Max number of recent errors to return
+   */
   getErrors(limit?: number): ErrorEvent[] {
     return limit ? this.errors.slice(-limit) : this.errors
   }
 
-  // Get aggregated stats
+  /**
+   * Get aggregated statistics for the current session
+   */
   getStats() {
     return {
       totalEvents: this.events.length,
@@ -179,7 +235,10 @@ class AnalyticsService {
     }
   }
 
-  // Clear old data (keep last 1000 entries)
+  /**
+   * Clear old data to prevent memory leaks
+   * Keeps only the last 1000 entries of each type
+   */
   cleanup() {
     const maxEntries = 1000
     if (this.events.length > maxEntries) {
@@ -195,11 +254,14 @@ class AnalyticsService {
 
   private sendToBackend(type: string, data: any) {
     if (typeof window === 'undefined') return
-    fetch('/api/analytics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, data }),
-    }).catch(err => console.error('Failed to send analytics', err))
+    void nextApiClient
+      .request({
+        path: apiPaths.analytics.post,
+        method: 'POST',
+        body: { type, data },
+        skipRetry: true,
+      })
+      .catch((err: unknown) => console.error('Failed to send analytics', err))
   }
 }
 

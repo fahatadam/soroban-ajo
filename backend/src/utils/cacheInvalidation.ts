@@ -39,7 +39,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate specific cache keys
+   * Invalidate specific individual cache keys.
+   * 
+   * @param keys - Array of exact Redis keys to remove
+   * @returns Promise resolving to the number of keys successfully deleted
    */
   static async invalidateKeys(keys: string[]): Promise<number> {
     if (keys.length === 0) return 0
@@ -55,7 +58,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate single cache key
+   * Invalidate a single, specific cache key.
+   * 
+   * @param key - The exact key to remove
+   * @returns Promise resolving to true if a key was deleted, false otherwise
    */
   static async invalidateKey(key: string): Promise<boolean> {
     try {
@@ -166,7 +172,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate all caches (use sparingly, e.g., during maintenance)
+   * Strategically flushes the entire Redis database.
+   * CAUTION: Use only during major system maintenance or emergency resets.
+   * 
+   * @returns Promise resolving to 1 if successful
    */
   static async invalidateAll(): Promise<number> {
     try {

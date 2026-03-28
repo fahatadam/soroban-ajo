@@ -11,6 +11,13 @@ function formatDate(raw: string | undefined): string {
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Export a list of transaction rows to a CSV file.
+ * Automatically handles escaping special characters.
+ * 
+ * @param rows - Array of transaction data
+ * @param filename - Optional custom filename
+ */
 export function exportToCSV(rows: TxRow[], filename = 'transactions.csv'): void {
   const headers = ['ID', 'Date', 'Type', 'Amount (XLM)', 'Member', 'Group', 'Status', 'Hash'];
   const escape = (v: string | number | undefined) => {
@@ -49,6 +56,13 @@ export function exportToCSV(rows: TxRow[], filename = 'transactions.csv'): void 
 
 // ─── PDF ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Export a list of transaction rows to a PDF file.
+ * Uses dynamic imports for jsPDF to reduce initial bundle size.
+ * 
+ * @param rows - Array of transaction data
+ * @param filename - Optional custom filename
+ */
 export async function exportToPDF(rows: TxRow[], filename = 'transactions.pdf'): Promise<void> {
   // Dynamic import keeps jspdf out of the initial bundle
   const { default: jsPDF } = await import('jspdf');

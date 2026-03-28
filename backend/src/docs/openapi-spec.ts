@@ -91,7 +91,20 @@ Paginated responses include:
 }
 \`\`\`
 
-## Two-Phase Transactions
+## API Versioning
+
+All API endpoints are versioned under \`/api/v1/\`. Requests to the legacy \`/api/<resource>\` paths are automatically redirected (HTTP 308) to the versioned equivalent for backward compatibility.
+
+Response headers on every API call:
+- \`X-API-Version\`: The version used for this request
+- \`X-API-Current-Version\`: The latest stable version
+
+When a version is deprecated, additional headers are included:
+- \`Deprecation: true\`
+- \`Sunset\`: Date the version will be removed
+- \`Link\`: URL of the successor version
+
+
 
 Group creation, joining, and contributions use a two-phase process:
 
@@ -126,18 +139,12 @@ Subscribe to real-time events:
 
   servers: [
     {
-      url: 'http://localhost:3001',
-      description: 'Development server',
-      variables: {
-        protocol: {
-          default: 'http',
-          enum: ['http', 'https'],
-        },
-      },
+      url: 'http://localhost:3001/api/v1',
+      description: 'Development server (v1)',
     },
     {
-      url: 'https://api.ajo.app',
-      description: 'Production server',
+      url: 'https://api.ajo.app/api/v1',
+      description: 'Production server (v1)',
     },
   ],
 

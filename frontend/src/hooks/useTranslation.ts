@@ -1,5 +1,12 @@
 import { useTranslations as useNextIntlTranslations, useFormatter } from 'next-intl';
 
+/**
+ * Hook for internationalization, providing translation and formatting utilities.
+ * Uses `next-intl` internally with custom helpers for currency and relative time.
+ * 
+ * @param namespace - Optional localization namespace
+ * @returns Translation function 't' and various formatters (date, number, currency)
+ */
 export function useTranslation(namespace?: string) {
   const t = useNextIntlTranslations(namespace);
   const format = useFormatter();

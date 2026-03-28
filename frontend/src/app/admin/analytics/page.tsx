@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/Button'
+import { nextApiClient } from '@/lib/apiClient'
+import { apiPaths } from '@/lib/apiEndpoints'
 import { 
   LineChart, 
   Line, 
@@ -97,16 +99,16 @@ export default function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     setLoading(true)
     try {
-      const [metricsRes, predictionsRes, funnelRes] = await Promise.all([
-        fetch(`/api/analytics/advanced?start=${dateRange.start}&end=${dateRange.end}`),
-        fetch('/api/analytics/predictive'),
-        fetch('/api/analytics/funnel'),
-      ])
-
       const [metricsData, predictionsData, funnelData] = await Promise.all([
-        metricsRes.json(),
-        predictionsRes.json(),
-        funnelRes.json(),
+        nextApiClient.request<AdvancedMetrics>({
+          path: apiPaths.analytics.advanced(dateRange.start, dateRange.end),
+        }),
+        nextApiClient.request<PredictiveMetrics>({
+          path: apiPaths.analytics.predictive,
+        }),
+        nextApiClient.request<FunnelData[]>({
+          path: apiPaths.analytics.funnel,
+        }),
       ])
 
       setMetrics(metricsData)
@@ -121,27 +123,25 @@ export default function AnalyticsDashboard() {
 
   const exportData = async (format: 'csv' | 'excel' | 'pdf') => {
     try {
-      const response = await fetch('/api/analytics/export', {
+      const blob = await nextApiClient.request<Blob>({
+        path: apiPaths.analytics.export,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           format,
           dateRange,
           includeMetrics: true,
           includePredictions: true,
           includeFunnel: true,
-        }),
+        },
+        parseAs: 'blob',
       })
 
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `analytics.${format}`
-        a.click()
-        window.URL.revokeObjectURL(url)
-      }
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `analytics.${format}`
+      a.click()
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Export failed:', error)
     }

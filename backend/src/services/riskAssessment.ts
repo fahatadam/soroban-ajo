@@ -14,6 +14,13 @@ export class RiskAssessmentService {
     this.sorobanService = new SorobanService()
   }
 
+  /**
+   * Retrieves the quantitative risk profile for a specific network member.
+   * Calls the Soroban contract to obtain the underlying risk score.
+   * 
+   * @param publicKey - The Stellar public key of the member
+   * @returns Promise resolving to the calculated RiskProfile
+   */
   async getMemberRiskProfile(publicKey: string): Promise<RiskProfile> {
     const args = [new StellarSdk.Address(publicKey).toScVal()]
     const score = await (this.sorobanService as any).simulateView('get_member_risk_score', args)
@@ -27,6 +34,12 @@ export class RiskAssessmentService {
     }
   }
 
+  /**
+   * Retrieves the combined risk profile for an entire savings group.
+   * 
+   * @param groupId - The unique ID of the group
+   * @returns Promise resolving to the calculated RiskProfile
+   */
   async getGroupRiskProfile(groupId: string): Promise<RiskProfile> {
     const args = [StellarSdk.nativeToScVal(BigInt(groupId), { type: 'u64' })]
     const score = await (this.sorobanService as any).simulateView('get_group_risk_rating', args)
@@ -40,6 +53,14 @@ export class RiskAssessmentService {
     }
   }
 
+  /**
+   * Calculates a dynamic insurance premium based on the base amount and risk score.
+   * Adjusts the rate from 0.5% to 2% based on risk thresholds.
+   * 
+   * @param baseAmount - The base contribution or payout amount (in stroops)
+   * @param riskScore - The numeric risk score (0-100)
+   * @returns The calculated premium amount as a string
+   */
   calculateDynamicPremium(baseAmount: string, riskScore: number): string {
     const amount = BigInt(baseAmount)
     // Example logic: higher risk score (lower numeric value) increases premium

@@ -12,6 +12,11 @@ declare global {
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
+/**
+ * Check if Google Analytics is initialized and enabled.
+ * 
+ * @returns True if GA is ready for tracking
+ */
 export function isGAEnabled(): boolean {
   return typeof window !== 'undefined' && !!GA_ID && typeof window.gtag === 'function'
 }
@@ -48,6 +53,12 @@ export function initGoogleAnalytics() {
 /**
  * Track a page view. Call on route changes.
  */
+/**
+ * Track a page view event.
+ * 
+ * @param url - Current page URL
+ * @param title - Optional page title
+ */
 export function trackPageView(url: string, title?: string) {
   if (!isGAEnabled()) return
   window.gtag('event', 'page_view', {
@@ -58,6 +69,12 @@ export function trackPageView(url: string, title?: string) {
 
 /**
  * Track a custom event.
+ */
+/**
+ * Track a custom GA4 event.
+ * 
+ * @param eventName - Name of the event
+ * @param params - Additional event metadata
  */
 export function trackEvent(
   eventName: string,
@@ -70,6 +87,14 @@ export function trackEvent(
 /**
  * Track a Web Vitals metric as a GA4 event.
  * Integrates with the monitoring.ts observeWebVitals callback.
+ */
+/**
+ * Track a Web Vitals metric as a GA4 event.
+ * Integrates with the monitoring service's vitals observer.
+ * 
+ * @param name - Metric name (e.g., 'LCP', 'CLS')
+ * @param value - Numeric metric value
+ * @param rating - Performance rating ('good', 'needs-improvement', 'poor')
  */
 export function trackWebVital(name: string, value: number, rating: string) {
   if (!isGAEnabled()) return

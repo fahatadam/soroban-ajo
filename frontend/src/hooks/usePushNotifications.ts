@@ -19,6 +19,12 @@ interface UsePushNotificationsReturn {
   unsubscribe: () => Promise<boolean>;
 }
 
+/**
+ * Hook for managing browser-level push notification subscriptions.
+ * Handles service worker registration, permission checks, and VAPID key exchange.
+ * 
+ * @returns Object with subscription status, loading state, and control methods
+ */
 export function usePushNotifications(): UsePushNotificationsReturn {
   const { setPushSubscription } = useNotifications();
   const [status, setStatus] = useState<PushStatus>('default');

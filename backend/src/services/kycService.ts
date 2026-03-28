@@ -16,7 +16,10 @@ export interface KycStatus {
 
 export class KycService {
   /**
-   * Retrieve a user's current KYC status/level.
+   * Retrieves the current KYC (Know Your Customer) status and level for a user.
+   * 
+   * @param walletAddress - The user's public wallet address
+   * @returns Promise resolving to the KycStatus object or null if user doesn't exist
    */
   static async getStatus(walletAddress: string): Promise<KycStatus | null> {
     const user = await prismaAny.user.findUnique({ where: { walletAddress } })
@@ -34,7 +37,10 @@ export class KycService {
   }
 
   /**
-   * Request KYC for a user (sets status to pending).
+   * Initiates a KYC verification request for a user, marking their status as 'pending'.
+   * 
+   * @param walletAddress - The user's public wallet address
+   * @returns Promise resolving when the request is recorded
    */
   static async requestVerification(walletAddress: string): Promise<void> {
     await prismaAny.user.update({
@@ -47,7 +53,12 @@ export class KycService {
   }
 
   /**
-   * Upload a supporting document for a user. docData is typically a base64 string or IPFS CID.
+   * Persists a record of a supporting KYC document (e.g., ID scan) to the database.
+   * 
+   * @param walletAddress - The user's wallet address
+   * @param docType - Category of document (e.g., 'passport', 'utility_bill')
+   * @param docData - Reference to the document (e.g., IPFS CID or internal path)
+   * @returns Promise resolving to the created document record
    */
   static async uploadDocument(walletAddress: string, docType: string, docData: string) {
     const user = await prismaAny.user.findUnique({ where: { walletAddress } })
@@ -63,7 +74,16 @@ export class KycService {
   }
 
   /**
-   * Change the KYC level/status for a user. Typically called by an admin after review.
+   * Updates a user's KYC level and status. Typically triggered by administrative review.
+   * Automatically records an audit log entry for the change.
+   * 
+   * @param params - Update details
+   * @param params.walletAddress - Target user's wallet address
+   * @param params.level - New KYC level (0-3)
+   * @param params.status - New verification status
+   * @param params.adminId - Optional ID of the administrator performing the update
+   * @param params.notes - Optional internal notes regarding the decision
+   * @returns Promise resolving to the updated user record
    */
   static async setKycLevel(params: {
     walletAddress: string
@@ -106,14 +126,20 @@ export class KycService {
   }
 
   /**
-   * Determine whether a given wallet address appears on the AML blacklist.
+   * Checks whether a specific wallet address is listed on the system's AML blacklist.
+   * 
+   * @param address - The wallet address to verify
+   * @returns Boolean indicating if the address is blacklisted
    */
   static isAddressBlacklisted(address: string): boolean {
     return complianceConfig.amlBlacklist.includes(address)
   }
 
   /**
-   * Get the transaction limit for a given KYC level.
+   * Retrieves the configured transaction limit for a specific KYC level.
+   * 
+   * @param level - The KYC level (0-3)
+   * @returns The maximum permitted transaction amount
    */
   static getTransactionLimit(level: number): number {
     return complianceConfig.transactionLimits[level] || 0

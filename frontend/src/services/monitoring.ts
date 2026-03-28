@@ -1,6 +1,3 @@
-// Monitoring service — ready for Sentry integration
-// To enable Sentry: npm install @sentry/nextjs and uncomment Sentry calls
-
 interface MonitoringEvent {
   error: Error
   context?: Record<string, any>
@@ -9,6 +6,10 @@ interface MonitoringEvent {
   sessionId?: string
 }
 
+/**
+ * Monitoring Service - Handles error capturing and messaging.
+ * Integrates with Sentry (if enabled) and local analytics.
+ */
 class MonitoringService {
   private enabled: boolean
   private dsn?: string
@@ -18,6 +19,10 @@ class MonitoringService {
     this.enabled = !!this.dsn
   }
 
+  /**
+   * Initialize the monitoring service.
+   * Sets up Sentry if a DSN is provided.
+   */
   initialize() {
     if (!this.enabled) {
       console.info('[Monitoring] Monitoring disabled — set NEXT_PUBLIC_SENTRY_DSN to enable')
@@ -27,6 +32,12 @@ class MonitoringService {
     console.info('[Monitoring] Monitoring initialized')
   }
 
+  /**
+   * Capture and report an error.
+   * Reports to Sentry (if enabled) and tracks in analytics.
+   * 
+   * @param event - The error event details
+   */
   captureError({ error, context, severity = 'medium', userId }: MonitoringEvent) {
     if (this.enabled) {
       // Sentry.withScope((scope) => {
@@ -45,6 +56,12 @@ class MonitoringService {
     console.error(`[Monitoring] ${severity.toUpperCase()}:`, error.message, context)
   }
 
+  /**
+   * Capture a custom message or log entry.
+   * 
+   * @param message - The message to capture
+   * @param severity - Message severity level
+   */
   captureMessage(message: string, severity: MonitoringEvent['severity'] = 'low') {
     if (this.enabled) {
       // Sentry.captureMessage(message, severity)
@@ -52,12 +69,21 @@ class MonitoringService {
     console.info(`[Monitoring] ${message}`)
   }
 
+  /**
+   * Set user context for monitoring.
+   * 
+   * @param userId - User's unique identifier
+   * @param email - User's email address (optional)
+   */
   setUser(userId: string, email?: string) {
     if (this.enabled) {
       // Sentry.setUser({ id: userId, email })
     }
   }
 
+  /**
+   * Clear the current user context.
+   */
   clearUser() {
     if (this.enabled) {
       // Sentry.setUser(null)

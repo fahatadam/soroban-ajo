@@ -30,18 +30,18 @@ export const DashboardLayout: React.FC = () => {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-indigo-700 dark:to-indigo-900 rounded-xl shadow-lg p-8 mb-8 text-white">
+          <div className="glass-card glass-card-primary p-8 mb-8 text-white">
             <h2 className="text-3xl font-bold mb-2">
               {isAuthenticated ? `Welcome back!` : 'Welcome to Soroban Ajo'}
             </h2>
-            <p className="text-blue-100 dark:text-indigo-200 text-lg">
+            <p className="text-primary-100 dark:text-primary-200 text-lg">
               {isAuthenticated
                 ? 'Manage your savings groups and track your contributions.'
                 : 'Connect your wallet to get started with community savings.'}
             </p>
             {!isAuthenticated && (
-              <div className="mt-6 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
-                <p className="text-sm text-blue-50 dark:text-indigo-100 mb-3">
+              <div className="mt-6 glass-card-subtle rounded-lg p-4">
+                <p className="text-sm text-primary-50 dark:text-primary-100 mb-3">
                   To start saving with your community, connect your Stellar wallet
                 </p>
                 <WalletConnector />
@@ -57,45 +57,42 @@ export const DashboardLayout: React.FC = () => {
                 aria-busy={showSkeleton}
                 aria-label={showSkeleton ? 'Loading dashboard stats' : 'Dashboard stats'}
               >
-                <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-gray-100 dark:border-slate-700 relative overflow-hidden">
-                  {showSkeleton && (
-                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
-                  )}
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-slate-100">
+                {/* Active Groups stat */}
+                <div className="glass-card glass-card-subtle p-6 relative overflow-hidden">
+                  {showSkeleton && <div className="absolute inset-0 glass-skeleton opacity-50 z-10 pointer-events-none" />}
+                  <h3 className="text-lg font-semibold mb-2 text-surface-900 dark:text-surface-100">
                     Active Groups
                   </h3>
                   {showSkeleton ? (
-                    <div className="skeleton h-9 w-12 rounded mt-1" />
+                    <div className="glass-skeleton h-9 w-12 rounded mt-1" />
                   ) : (
-                    <p className="text-3xl font-bold text-blue-600 dark:text-indigo-400 animate-fade-in">0</p>
+                    <p className="text-3xl font-bold text-primary-600 dark:text-primary-400 animate-fade-in">0</p>
                   )}
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-gray-100 dark:border-slate-700 relative overflow-hidden">
-                  {showSkeleton && (
-                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
-                  )}
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-slate-100">
+                {/* Total Saved stat */}
+                <div className="glass-card glass-card-subtle p-6 relative overflow-hidden">
+                  {showSkeleton && <div className="absolute inset-0 glass-skeleton opacity-50 z-10 pointer-events-none" />}
+                  <h3 className="text-lg font-semibold mb-2 text-surface-900 dark:text-surface-100">
                     Total Saved
                   </h3>
                   {showSkeleton ? (
-                    <div className="skeleton h-9 w-24 rounded mt-1" />
+                    <div className="glass-skeleton h-9 w-24 rounded mt-1" />
                   ) : (
-                    <p className="text-3xl font-bold text-green-600 dark:text-emerald-400 animate-fade-in">$0.00</p>
+                    <p className="text-3xl font-bold text-success-600 dark:text-success-500 animate-fade-in">$0.00</p>
                   )}
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-gray-100 dark:border-slate-700 relative overflow-hidden">
-                  {showSkeleton && (
-                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
-                  )}
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-slate-100">
+                {/* Next Payout stat */}
+                <div className="glass-card glass-card-subtle p-6 relative overflow-hidden">
+                  {showSkeleton && <div className="absolute inset-0 glass-skeleton opacity-50 z-10 pointer-events-none" />}
+                  <h3 className="text-lg font-semibold mb-2 text-surface-900 dark:text-surface-100">
                     Next Payout
                   </h3>
                   {showSkeleton ? (
-                    <div className="skeleton h-6 w-32 rounded mt-2" />
+                    <div className="glass-skeleton h-6 w-32 rounded mt-2" />
                   ) : (
-                    <p className="text-gray-600 dark:text-slate-400 animate-fade-in">None scheduled</p>
+                    <p className="text-surface-500 dark:text-surface-400 animate-fade-in">None scheduled</p>
                   )}
                 </div>
               </div>
@@ -129,7 +126,7 @@ export const DashboardLayout: React.FC = () => {
                     <GroupCard isLoading={true} />
                   </div>
                 ) : (
-                  <div className="bg-white dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-slate-600 p-12 text-center">
+                  <div className="glass-card p-12 text-center border-2 border-dashed border-white/40 dark:border-white/10">
                     <svg
                       className="w-16 h-16 text-gray-400 dark:text-slate-500 mx-auto mb-4"
                       fill="none"

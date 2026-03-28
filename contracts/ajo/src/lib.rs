@@ -31,3 +31,4 @@ pub use types::{PayoutOrderingStrategy, PayoutVote, PayoutOrder};
 pub use types::{ReminderType, MemberNotificationPreferences, ReminderRecord};
 pub use types::{GroupMilestone, MemberAchievement, MilestoneRecord, AchievementRecord, MemberStats};
 pub use types::{TokenConfig, MultiTokenConfig, TokenContribution};
+pub use types::{Dispute, DisputeType, DisputeStatus, DisputeResolution, DisputeVote};

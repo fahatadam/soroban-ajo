@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Activity, AlertTriangle, ArrowUpRight, HeartPulse, ShieldAlert, Users } from 'lucide-react';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 interface DashboardMetrics {
   activeUsers: number;
@@ -49,11 +51,11 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    fetch('/api/admin/dashboard', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
+    nextApiClient
+      .request<DashboardData>({
+        path: apiPaths.admin.dashboard,
+        auth: 'admin',
+      })
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));

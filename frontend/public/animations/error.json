@@ -1,0 +1,11 @@
+{
+  "id": "error",
+  "viewBox": "0 0 80 80",
+  "circle": { "cx": 40, "cy": 40, "r": 36 },
+  "crossPath1": "M26 26 L54 54",
+  "crossPath2": "M54 26 L26 54",
+  "colors": {
+    "circle": "#ef4444",
+    "cross": "#ffffff"
+  }
+}

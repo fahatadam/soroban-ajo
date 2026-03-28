@@ -510,3 +510,8 @@ pub fn calculate_equivalent_amount(
 ) -> i128 {
     (base_amount * (primary_weight as i128)) / (token_weight as i128)
 }
+
+/// Returns `true` if `address` is either the complainant or defendant in a dispute.
+pub fn is_dispute_member(dispute: &crate::types::Dispute, address: &Address) -> bool {
+    dispute.complainant == *address || dispute.defendant == *address
+}

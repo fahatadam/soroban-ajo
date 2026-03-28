@@ -2,7 +2,17 @@ import toast from 'react-hot-toast'
 import { analytics } from '../services/analytics'
 import { useNotificationStore } from '../store/notificationStore'
 
+/**
+ * Centralized utility for displaying UI notifications and tracking them.
+ * Integrates with react-hot-toast and the global notification store.
+ */
 export const showNotification = {
+  /**
+   * Show a success toast and track the event.
+   * 
+   * @param message - Content to display
+   * @param metadata - Optional tracking metadata
+   */
   success: (message: string, metadata?: Record<string, unknown>) => {
     analytics.trackEvent({
       category: 'Notification',
@@ -23,6 +33,12 @@ export const showNotification = {
     })
   },
 
+  /**
+   * Show an error toast and log the error to analytics.
+   * 
+   * @param message - Error description
+   * @param metadata - Optional tracking metadata
+   */
   error: (message: string, metadata?: Record<string, unknown>) => {
     analytics.trackError(new Error(message), { ...metadata, operation: 'notification' }, 'low')
 
@@ -82,6 +98,14 @@ export const showNotification = {
     })
   },
 
+  /**
+   * Wrap an async promise with loading, success, and error states.
+   * 
+   * @param promise - The async operation to track
+   * @param messages - Labels for each state
+   * @param metadata - Optional tracking metadata
+   * @returns The resolved data from the promise
+   */
   promise: async <T>(
     promise: Promise<T>,
     messages: { loading: string; success: string; error: string },

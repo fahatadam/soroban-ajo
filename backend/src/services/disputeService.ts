@@ -34,6 +34,18 @@ const GROUP_INDEX_PREFIX = 'group_disputes:'
 const DEFAULT_VOTING_WINDOW = Number(process.env.DISPUTE_VOTING_WINDOW_SECONDS) || 60 * 60 * 24 * 2
 
 export const disputeService = {
+  /**
+   * Files a new dispute for a savings group.
+   * Only active group members are permitted to initiate disputes.
+   * 
+   * @param groupId - The ID of the group where the dispute occurred
+   * @param filedBy - The wallet address of the user filing the dispute
+   * @param type - The category of the dispute (e.g., 'non_payment', 'fraud')
+   * @param summary - A brief explanation of the dispute
+   * @param evidence - Array of evidence items (text or URLs to screenshots)
+   * @returns Promise resolving to the created Dispute object
+   * @throws {Error} If the filer is not a member of the group
+   */
   async fileDispute(
     groupId: string,
     filedBy: string,
@@ -76,22 +88,44 @@ export const disputeService = {
     return dispute
   },
 
+  /**
+   * Retrieves a single dispute record by its unique ID from the cache.
+   * 
+   * @param id - The unique identifier of the dispute
+   * @returns Promise resolving to the Dispute object or null if not found
+   */
   async getDispute(id: string): Promise<Dispute | null> {
     const raw = await redisClient.get(DISPUTE_PREFIX + id)
     if (!raw) return null
     return JSON.parse(raw) as Dispute
   },
 
+  /**
+   * Lists all disputes associated with a specific savings group.
+   * 
+   * @param groupId - The ID of the group
+   * @returns Promise resolving to an array of Dispute objects
+   */
   async listGroupDisputes(groupId: string) {
     const ids = await redisClient.smembers(GROUP_INDEX_PREFIX + groupId)
     const pipe = redisClient.pipeline()
-    ids.forEach((id) => pipe.get(DISPUTE_PREFIX + id))
+    ids.forEach((id: string) => pipe.get(DISPUTE_PREFIX + id))
     const res = await pipe.exec()
     return (res || [])
-      .map((r) => (r && r[1] ? JSON.parse(r[1] as string) : null))
+      .map((r: any) => (r && r[1] ? JSON.parse(r[1] as string) : null))
       .filter(Boolean) as Dispute[]
   },
 
+  /**
+   * Registers a member's vote ('yes' or 'no') on an open dispute.
+   * Automatically attempts to resolve the dispute if a majority is reached.
+   * 
+   * @param disputeId - The ID of the dispute to vote on
+   * @param voter - The wallet address of the voter
+   * @param vote - The vote choice ('yes' or 'no')
+   * @returns Promise resolving to the updated Dispute object
+   * @throws {Error} If the dispute is not found, voting is closed, or voter is not a member
+   */
   async voteOnDispute(disputeId: string, voter: string, vote: 'yes' | 'no') {
     const dispute = await this.getDispute(disputeId)
     if (!dispute) throw new Error('Dispute not found')
@@ -116,6 +150,15 @@ export const disputeService = {
     return dispute
   },
 
+  /**
+   * Evaluates a dispute for automatic resolution based on community votes.
+   * If a majority threshold (>50%) is reached for either side, the dispute is resolved.
+   * If the voting deadline has passed without a majority, the dispute is escalated to admins.
+   * 
+   * @param disputeId - The ID of the dispute to evaluate
+   * @returns Promise resolving to the (potentially updated) Dispute object
+   * @internal
+   */
   async tryAutoResolve(disputeId: string) {
     const dispute = await this.getDispute(disputeId)
     if (!dispute) return null
@@ -156,6 +199,13 @@ export const disputeService = {
     return dispute
   },
 
+  /**
+   * Manually escalates a dispute to administrative review.
+   * 
+   * @param disputeId - The ID of the dispute to escalate
+   * @returns Promise resolving to the updated Dispute object
+   * @throws {Error} If the dispute is not found
+   */
   async escalateToAdmin(disputeId: string) {
     const dispute = await this.getDispute(disputeId)
     if (!dispute) throw new Error('Dispute not found')
@@ -164,6 +214,15 @@ export const disputeService = {
     return dispute
   },
 
+  /**
+   * Allows an administrator to provide a final resolution for an escalated dispute.
+   * 
+   * @param disputeId - The ID of the dispute to resolve
+   * @param adminId - The unique ID of the resolving administrator
+   * @param decision - The final decision or explanation from the admin
+   * @returns Promise resolving to the resolved Dispute object
+   * @throws {Error} If the dispute is not found
+   */
   async adminResolve(disputeId: string, adminId: string, decision: string) {
     const dispute = await this.getDispute(disputeId)
     if (!dispute) throw new Error('Dispute not found')

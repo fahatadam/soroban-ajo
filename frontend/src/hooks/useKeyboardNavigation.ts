@@ -8,6 +8,11 @@ interface KeyboardShortcut {
   callback: () => void;
 }
 
+/**
+ * Hook to register global keyboard shortcuts.
+ * 
+ * @param shortcuts - Array of shortcut configurations (key, modifiers, and callback)
+ */
 export function useKeyboardNavigation(shortcuts: KeyboardShortcut[]) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,6 +34,12 @@ export function useKeyboardNavigation(shortcuts: KeyboardShortcut[]) {
   }, [shortcuts]);
 }
 
+/**
+ * Specialized hook for handling the Escape key.
+ * 
+ * @param callback - Function to execute when Escape is pressed
+ * @param isActive - Whether the listener should be active
+ */
 export function useEscapeKey(callback: () => void, isActive: boolean = true) {
   useEffect(() => {
     if (!isActive) return;

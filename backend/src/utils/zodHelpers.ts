@@ -12,7 +12,12 @@ export function formatZodErrors(error: ZodError) {
 }
 
 /**
- * Safe parse that returns a typed result instead of throwing.
+ * Performs a type-safe parse of a Zod schema against raw data.
+ * Captures and formats validation errors instead of throwing an exception.
+ * 
+ * @param schema - The Zod schema to validate against
+ * @param data - The raw data to be parsed
+ * @returns An object with either the typed data or an array of formatted errors
  */
 export function safeParse<T>(
   schema: ZodSchema<T>,
@@ -26,7 +31,11 @@ export function safeParse<T>(
 }
 
 /**
- * Strips undefined values from an object (useful before DB updates).
+ * Recursively strips all properties with `undefined` values from an object.
+ * Frequently used to clean up partial update payloads before database ingestion.
+ * 
+ * @param obj - The source object
+ * @returns A new object with no undefined fields
  */
 export function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(

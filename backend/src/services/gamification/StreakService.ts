@@ -8,7 +8,7 @@ export class StreakService {
     streak: number;
     bonusAwarded: boolean;
   }> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const gamification = await tx.userGamification.findUnique({
         where: { userId },
       });
@@ -76,7 +76,7 @@ export class StreakService {
   }
 
   async updateLoginStreak(userId: string): Promise<{ streak: number }> {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const gamification = await tx.userGamification.findUnique({
         where: { userId },
       });

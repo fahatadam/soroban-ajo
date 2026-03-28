@@ -15,6 +15,12 @@ interface UseRetryResult {
   reset: () => void
 }
 
+/**
+ * Hook to execute an asynchronous function with automatic retries and exponential backoff.
+ * 
+ * @param options - Retry configuration (max attempts, initial delay, etc.)
+ * @returns Object containing retry state (current attempt, error) and the execute method
+ */
 export function useRetry(options: UseRetryOptions = {}): UseRetryResult {
   const {
     maxAttempts = 3,

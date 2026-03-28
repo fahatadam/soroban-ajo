@@ -2,7 +2,7 @@ import { Router, Response } from 'express'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
 import { notificationService } from '../services/notificationService'
 import { prisma } from '../config/database'
-import logger from '../utils/logger'
+import { logger } from '../utils/logger'
 
 export const notificationsRouter = Router()
 
@@ -15,7 +15,7 @@ notificationsRouter.use(authMiddleware)
  */
 notificationsRouter.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user!.walletAddress
+    const userId = req.user!.walletAddress!
     const limit = Math.min(Number(req.query.limit) || 50, 100)
     const offset = Number(req.query.offset) || 0
 
@@ -28,14 +28,14 @@ notificationsRouter.get('/', async (req: AuthRequest, res: Response) => {
 
     res.json({
       success: true,
-      data: activities.map((a) => ({
+      data: activities.map((a: any) => ({
         id: a.id,
         type: a.type.toLowerCase(),
         title: a.title,
         message: a.description,
         timestamp: a.createdAt.getTime(),
         read: false, // read state is managed client-side
-        metadata: a.metadata ? JSON.parse(a.metadata) : null,
+        metadata: a.metadata ? JSON.parse(a.metadata as string) : null,
       })),
     })
   } catch (err) {
@@ -50,7 +50,7 @@ notificationsRouter.get('/', async (req: AuthRequest, res: Response) => {
  */
 notificationsRouter.post('/test', async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user!.walletAddress
+    const userId = req.user!.walletAddress!
     const notification = notificationService.sendToUser(userId, {
       type: 'announcement',
       title: 'Test Notification',
@@ -69,7 +69,7 @@ notificationsRouter.post('/test', async (req: AuthRequest, res: Response) => {
  * Returns whether the authenticated user is currently connected via WebSocket.
  */
 notificationsRouter.get('/status', (req: AuthRequest, res: Response) => {
-  const userId = req.user!.walletAddress
+  const userId = req.user!.walletAddress!
   res.json({
     success: true,
     data: { online: notificationService.isUserOnline(userId) },

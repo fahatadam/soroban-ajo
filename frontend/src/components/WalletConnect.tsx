@@ -61,7 +61,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
     if (isConnected && address) {
         return (
             <div className={`wallet-connect-container ${className}`}>
-                <div className="flex items-center gap-3 p-4 bg-success-50 dark:bg-success-500/10 border border-success-100 dark:border-success-700 rounded-xl">
+                <div className="flex items-center gap-3 p-4 glass-card border-success-200/60 dark:border-success-700/30 rounded-xl">
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="inline-block w-2 h-2 bg-success-500 rounded-full" />

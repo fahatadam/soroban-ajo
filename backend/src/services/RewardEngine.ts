@@ -1,6 +1,9 @@
-import { PrismaClient, Reward } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { RewardConfiguration, RewardDefinition, NFTMetadata } from './RewardConfigParser';
 import { FraudDetector } from './FraudDetector';
+
+// Local type alias since Reward model may not be in the generated Prisma client
+type Reward = Record<string, any>;
 
 /**
  * Core engine for reward calculation, distribution, and management
@@ -14,8 +17,11 @@ export class RewardEngine {
   ) {}
 
   /**
-   * Load reward configuration
-   * @param config - Reward configuration
+   * Loads a new reward configuration into the engine and persists it to the database.
+   * Automatically deactivates any existing configurations with lower version numbers.
+   * 
+   * @param config - The validated RewardConfiguration object to activate
+   * @returns Promise resolving when the configuration is successfully loaded and persisted
    */
   async loadConfiguration(config: RewardConfiguration): Promise<void> {
     this.config = config;
@@ -44,8 +50,11 @@ export class RewardEngine {
   }
 
   /**
-   * Get active configuration
-   * @returns Active reward configuration
+   * Retrieves the currently active reward configuration.
+   * If not cached in memory, it will be fetched from the database.
+   * 
+   * @returns Promise resolving to the active RewardConfiguration
+   * @throws {Error} If no active configuration is found in the database
    */
   async getConfiguration(): Promise<RewardConfiguration> {
     if (this.config) {
@@ -67,9 +76,12 @@ export class RewardEngine {
   }
 
   /**
-   * Distribute rewards for a completed referral
-   * @param referrerId - User who referred
-   * @param refereeId - User who was referred
+   * Orchestrates the distribution of rewards for a successfully completed referral.
+   * Checks for fraud blocks on both parties before granting defined rewards.
+   * 
+   * @param referrerId - Unique identifier of the user who made the referral
+   * @param refereeId - Unique identifier of the user who was referred
+   * @returns Promise resolving when rewards for both parties are processed
    */
   async distributeReferralReward(referrerId: string, refereeId: string): Promise<void> {
     // Check if rewards should be blocked
@@ -97,9 +109,12 @@ export class RewardEngine {
   }
 
   /**
-   * Distribute rewards for an unlocked achievement
-   * @param userId - User who unlocked achievement
-   * @param achievementId - Achievement identifier
+   * Distributes rewards associated with a specific achievement that a user has unlocked.
+   * 
+   * @param userId - Unique identifier of the user who unlocked the achievement
+   * @param achievementId - Programmatic name of the achievement
+   * @returns Promise resolving when all associated rewards are granted
+   * @throws {Error} If the specified achievement is not found in the current configuration
    */
   async distributeAchievementReward(userId: string, achievementId: string): Promise<void> {
     if (await this.fraudDetector.shouldBlockReward(userId)) {
@@ -120,11 +135,15 @@ export class RewardEngine {
   }
 
   /**
-   * Grant a reward based on definition
-   * @param userId - User to receive reward
-   * @param rewardDef - Reward definition
-   * @param source - Source of reward
-   * @param sourceId - Source identifier
+   * High-level dispatcher that grants a specific reward type based on its definition.
+   * 
+   * @param userId - Unique identifier of the recipient
+   * @param rewardDef - Precise definition of the reward (type, amount, metadata)
+   * @param source - The context of the reward (e.g., 'REFERRAL', 'ACHIEVEMENT')
+   * @param sourceId - Related identifier for tracking (e.g., refereeId, achievementId)
+   * @returns Promise resolving to the created Reward record
+   * @throws {Error} If the reward type is unsupported
+   * @internal
    */
   private async grantReward(
     userId: string,
@@ -177,13 +196,14 @@ export class RewardEngine {
   }
 
   /**
-   * Grant a fee discount reward
-   * @param userId - User ID
-   * @param percent - Discount percentage
-   * @param expiresAt - Expiration date
-   * @param source - Reward source
-   * @param sourceId - Source ID
-   * @returns Created reward
+   * Grants a percentage-based fee discount to a user for a specific duration.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param percent - The discount percentage (e.g., 10 for 10%)
+   * @param expiresAt - Date when the discount becomes invalid
+   * @param source - Contextual source of the discount
+   * @param sourceId - Optional related identifier
+   * @returns Promise resolving to the created Reward record
    */
   async grantFeeDiscount(
     userId: string,
@@ -206,12 +226,14 @@ export class RewardEngine {
   }
 
   /**
-   * Grant bonus tokens (blockchain transaction required)
-   * @param userId - User ID
-   * @param amount - Token amount
-   * @param source - Reward source
-   * @param sourceId - Source ID
-   * @returns Created reward
+   * Grants bonus tokens to a user. This initially creates a 'PENDING' record and
+   * then triggers the blockchain transfer (mocked in current implementation).
+   * 
+   * @param userId - Unique identifier of the user
+   * @param amount - Number of tokens to award (as bigint)
+   * @param source - Contextual source of the award
+   * @param sourceId - Optional related identifier
+   * @returns Promise resolving to the activated Reward record
    */
   async grantBonusTokens(
     userId: string,
@@ -242,13 +264,14 @@ export class RewardEngine {
   }
 
   /**
-   * Grant premium feature access
-   * @param userId - User ID
-   * @param featureId - Feature identifier
-   * @param expiresAt - Expiration date
-   * @param source - Reward source
-   * @param sourceId - Source ID
-   * @returns Created reward
+   * Grants temporary access to a premium feature.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param featureId - Identifier of the feature to enable
+   * @param expiresAt - Date when access should be revoked
+   * @param source - Contextual source of the access grant
+   * @param sourceId - Optional related identifier
+   * @returns Promise resolving to the created Reward record
    */
   async grantPremiumFeature(
     userId: string,
@@ -271,12 +294,13 @@ export class RewardEngine {
   }
 
   /**
-   * Mint NFT badge (blockchain transaction required)
-   * @param userId - User ID
-   * @param metadata - NFT metadata
-   * @param source - Reward source
-   * @param sourceId - Source ID
-   * @returns Created reward
+   * Initiates the minting of an NFT badge for a user.
+   * 
+   * @param userId - Unique identifier of the recipient
+   * @param metadata - NFT metadata (name, image URI, attributes)
+   * @param source - Contextual source of the badge
+   * @param sourceId - Optional related identifier
+   * @returns Promise resolving to the activated Reward record
    */
   async mintNFTBadge(
     userId: string,
@@ -307,10 +331,11 @@ export class RewardEngine {
   }
 
   /**
-   * Get active rewards for a user
-   * @param userId - User ID
-   * @param type - Optional reward type filter
-   * @returns List of active rewards
+   * Retrieves all rewards currently active and not expired for a user.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param type - Optional filter by reward type (e.g., 'FEE_DISCOUNT')
+   * @returns Promise resolving to a list of active Reward records
    */
   async getActiveRewards(userId: string, type?: string): Promise<Reward[]> {
     return this.prisma.reward.findMany({
@@ -328,8 +353,11 @@ export class RewardEngine {
   }
 
   /**
-   * Redeem a reward
-   * @param rewardId - Reward ID
+   * Marks a reward as 'REDEEMED', indicating it has been used by the user.
+   * 
+   * @param rewardId - Unique identifier of the reward to redeem
+   * @returns Promise resolving when the status is updated
+   * @throws {Error} If the reward is not found, not active, or has expired
    */
   async redeemReward(rewardId: string): Promise<void> {
     const reward = await this.prisma.reward.findUnique({
@@ -358,7 +386,9 @@ export class RewardEngine {
   }
 
   /**
-   * Expire old rewards (background job)
+   * Periodic maintenance task that marks all rewards past their expiration date as 'EXPIRED'.
+   * 
+   * @returns Promise resolving to the number of rewards updated
    */
   async expireRewards(): Promise<number> {
     const result = await this.prisma.reward.updateMany({
@@ -375,9 +405,10 @@ export class RewardEngine {
   }
 
   /**
-   * Get applicable fee discount for a user
-   * @param userId - User ID
-   * @returns Highest discount percentage or 0
+   * Calculates the maximum applicable fee discount currently available to a user.
+   * 
+   * @param userId - Unique identifier of the user
+   * @returns Promise resolving to the highest discount percentage found among active rewards
    */
   async getApplicableDiscount(userId: string): Promise<number> {
     const discounts = await this.getActiveRewards(userId, 'FEE_DISCOUNT');
@@ -391,20 +422,22 @@ export class RewardEngine {
   }
 
   /**
-   * Calculate discounted fee
-   * @param originalFee - Original fee amount
-   * @param discountPercent - Discount percentage
-   * @returns Discounted fee
+   * Utility method to calculate the final fee value after applying a percentage discount.
+   * 
+   * @param originalFee - The base fee amount before discount
+   * @param discountPercent - The discount percentage to apply
+   * @returns The final discounted fee amount
    */
   calculateDiscountedFee(originalFee: number, discountPercent: number): number {
     return originalFee * (1 - discountPercent / 100);
   }
 
   /**
-   * Check if user has access to a premium feature
-   * @param userId - User ID
-   * @param featureId - Feature identifier
-   * @returns true if user has active access
+   * Checks if a user has valid, active access to a specific premium feature.
+   * 
+   * @param userId - Unique identifier of the user
+   * @param featureId - Identifier of the premium feature
+   * @returns Promise resolving to true if access is currently granted
    */
   async hasPremiumFeatureAccess(userId: string, featureId: string): Promise<boolean> {
     const features = await this.prisma.reward.findMany({

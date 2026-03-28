@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 export default function AuditPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -16,13 +18,18 @@ export default function AuditPage() {
 
   const fetchLogs = () => {
     setLoading(true);
-    const token = localStorage.getItem('adminToken');
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (actionFilter) params.set('action', actionFilter);
 
-    fetch(`/api/admin/audit?${params}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => { setLogs(d.logs); setTotal(d.total); })
+    nextApiClient
+      .request<{ logs: any[]; total: number }>({
+        path: apiPaths.admin.audit(params.toString()),
+        auth: 'admin',
+      })
+      .then(d => {
+        setLogs(d.logs);
+        setTotal(d.total);
+      })
       .finally(() => setLoading(false));
   };
 

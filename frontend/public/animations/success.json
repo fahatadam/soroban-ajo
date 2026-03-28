@@ -1,0 +1,10 @@
+{
+  "id": "success",
+  "viewBox": "0 0 80 80",
+  "circle": { "cx": 40, "cy": 40, "r": 36 },
+  "checkPath": "M22 40 L34 52 L58 28",
+  "colors": {
+    "circle": "#10b981",
+    "check": "#ffffff"
+  }
+}

@@ -9,12 +9,11 @@ import { logger } from '../utils/logger'
 
 class WebSocketService {
   /**
-   * Call this after chatService.init() to attach the notification namespace
-   * to the same Socket.IO server.
-   *
-   * @param io - The Socket.IO Server instance returned by chatService.getIO()
+   * Attaches the notification namespace to an existing Socket.IO server.
+   * Should be called during system startup, typically after chat service initialization.
+   * 
+   * @param io - The shared Socket.IO Server instance
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   init(io: any) {
     notificationService.init(io)
     logger.info('WebSocketService: notification namespace attached')

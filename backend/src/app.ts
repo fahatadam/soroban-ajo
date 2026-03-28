@@ -3,29 +3,18 @@ import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
-import { errorHandler } from './middleware/errorHandler'
+import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
-import { groupsRouter } from './routes/groups'
 import { healthRouter } from './routes/health'
-import { webhooksRouter } from './routes/webhooks'
-import { authRouter } from './routes/auth'
-import { analyticsRouter } from './routes/analytics'
-import { emailRouter } from './routes/email'
-import { jobsRouter } from './routes/jobs'
-import { gamificationRouter } from './routes/gamification'
-import { goalsRouter } from './routes/goals'
 import { setupSwagger } from './swagger'
-import { createIpLimiter, createUserLimiter } from './middleware/rateLimiter'
+import { createIpLimiter } from './middleware/rateLimiter'
 import { createDdosProtector } from './middleware/ddosProtector'
-import { kycRouter } from './routes/kyc'
-import { disputesRouter } from './routes/disputes'
-import rewardsRouter from './routes/rewards'
-import referralsRouter from './routes/referrals'
-import { chatRouter } from './routes/chat'
-import { notificationsRouter } from './routes/notifications'
 import { chatService } from './services/chatService'
 import { notificationService } from './services/notificationService'
 import { logger } from './utils/logger'
+import { apiVersionMiddleware } from './middleware/apiVersion'
+import { v1Router } from './routes/v1'
+import { v2Router } from './routes/v2'
 
 dotenv.config()
 
@@ -43,7 +32,7 @@ if (chatIO) {
   logger.warn('chatService IO not available; notifications namespace not initialized')
 }
 
-// Middleware
+// Core middleware
 app.use(helmet())
 app.use(
   cors({
@@ -51,6 +40,16 @@ app.use(
       ? [process.env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:5173']
       : ['http://localhost:3000', 'http://localhost:5173'],
     credentials: true,
+    exposedHeaders: [
+      'X-API-Version',
+      'X-API-Current-Version',
+      'Deprecation',
+      'Sunset',
+      'X-API-Deprecation-Date',
+      'X-API-Sunset-Date',
+      'X-API-Migration-Guide',
+      'X-API-Breaking-Changes',
+    ],
   })
 )
 app.use(requestLogger)
@@ -58,37 +57,49 @@ app.set('trust proxy', 1)
 app.use(createDdosProtector())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use('/api', createIpLimiter('global'))
 
 // API Documentation
 setupSwagger(app)
 
-// Routes
+// Health (unversioned — infrastructure concern, not API resource)
 app.use('/health', healthRouter)
-app.use('/api/auth', createIpLimiter('auth'), authRouter)
-app.use('/api/groups', createUserLimiter(), groupsRouter)
-app.use('/api/webhooks', createIpLimiter('auth'), webhooksRouter)
-app.use('/api/analytics', createUserLimiter(), analyticsRouter)
-app.use('/api/email', emailRouter)
-app.use('/api/jobs', jobsRouter)
-app.use('/api/gamification', createIpLimiter('expensive'), createUserLimiter(), gamificationRouter)
-app.use('/api/goals', createUserLimiter(), goalsRouter)
-app.use('/api/kyc', kycRouter)
-app.use('/api/disputes', disputesRouter)
-app.use('/api/rewards', rewardsRouter)
-app.use('/api/referrals', referralsRouter)
-app.use('/api/chat', createUserLimiter(), chatRouter)
-app.use('/api/notifications', createUserLimiter(), notificationsRouter)
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Not found',
+// Versioned APIs
+// All routes live under /api/v1/ or /api/v2/
+app.use('/api/v2', createIpLimiter('global'), apiVersionMiddleware, v2Router)
+app.use('/api/v1', createIpLimiter('global'), apiVersionMiddleware, v1Router)
+
+// Backward-compatible redirect: /api/<resource> → /api/v2/<resource>
+// Updated to point to latest version (v2) for new clients
+// Clients on the old paths continue to work without changes.
+app.use('/api/:resource', (req, res) => {
+  const target = `/api/v2/${req.params.resource}${req.path === '/' ? '' : req.path}`
+  res.redirect(308, target)
+})
+
+// Version info endpoint (unversioned, informational)
+app.use('/api-versions', (req, res) => {
+  res.json({
+    currentVersion: 'v2',
+    supportedVersions: ['v1', 'v2'],
+    v1: {
+      status: 'supported',
+      releaseDate: '2024-01-01',
+      sunsetDate: null,
+      url: '/api/v1/',
+    },
+    v2: {
+      status: 'active',
+      releaseDate: '2026-04-01',
+      sunsetDate: null,
+      url: '/api/v2/',
+      features: ['Enhanced pagination', 'Improved error handling', 'Better deprecation support'],
+    },
   })
 })
 
-// Error handling
+// 404 & error handlers
+app.use(notFoundHandler)
 app.use(errorHandler)
 
 // Start server
@@ -96,6 +107,7 @@ const PORT = process.env.PORT || 3001
 server.listen(PORT, () => {
   logger.info(`Server started on port ${PORT}`, { env: process.env.NODE_ENV || 'development' })
   logger.info('Socket.IO chat service initialized')
+  logger.info('API versioning enabled - v1 (legacy) and v2 (current) supported')
 })
 
 // Graceful shutdown

@@ -37,14 +37,16 @@ const POLL_MS = 30_000 // refresh every 30 seconds
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 /**
- * useWalletBalance
- *
- * Fetches and auto-refreshes the XLM balance for the connected wallet.
- * Pass the `address` string from `useAuthContext()`.
- *
- * @example
- * const { isAuthenticated, address } = useAuthContext()
- * const { balance, recentTxs, refetch } = useWalletBalance(address)
+ * Hook to retrieve and periodically refresh the XLM balance of a Stellar account.
+ * Calculates total, available, and locked (in-contract) balances.
+ * 
+ * Features:
+ * - POLLING for real-time balance updates
+ * - AUTOMATIC refetching when address changes
+ * - AGGREGATION of locked balances across group contracts
+ * 
+ * @param address - The Stellar public key to monitor
+ * @returns Balance state and a manual refetch trigger
  */
 export function useWalletBalance(address: string | null | undefined) {
   const [balance, setBalance] = useState<WalletBalance>(EMPTY)

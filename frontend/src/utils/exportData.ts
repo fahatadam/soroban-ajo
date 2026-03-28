@@ -1,13 +1,25 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+/**
+ * Configuration for data exports (CSV/PDF).
+ */
 export interface ExportData {
+  /** Column headers */
   headers: string[];
+  /** 2D array of row data */
   rows: (string | number)[][];
+  /** Optional document title */
   title?: string;
+  /** Resulting filename (incl. extension) */
   filename?: string;
 }
 
+/**
+ * Triggers a browser download of the provided data in CSV format.
+ * 
+ * @param data - The data to export
+ */
 export const exportToCSV = (data: ExportData): void => {
   const { headers, rows, filename = 'export.csv' } = data;
 
@@ -30,6 +42,12 @@ export const exportToCSV = (data: ExportData): void => {
   document.body.removeChild(link);
 };
 
+/**
+ * Generates and downloads a PDF document containing the provided data as a table.
+ * Uses jsPDF and autoTable.
+ * 
+ * @param data - The data to export
+ */
 export const exportToPDF = (data: ExportData): void => {
   const { headers, rows, title = 'Report', filename = 'export.pdf' } = data;
 
@@ -56,6 +74,12 @@ export const exportToPDF = (data: ExportData): void => {
   doc.save(filename);
 };
 
+/**
+ * Format a number as a USD currency string.
+ * 
+ * @param amount - The numeric value
+ * @returns Formatted currency string
+ */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
@@ -63,6 +87,12 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+/**
+ * Format a date for display in reports.
+ * 
+ * @param date - Date object or timestamp
+ * @returns Formatted date string
+ */
 export const formatDate = (date: Date | number): string => {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',

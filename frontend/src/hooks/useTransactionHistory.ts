@@ -12,11 +12,17 @@ export interface TxRow extends Transaction {
 
 // ─── Filter / sort state ──────────────────────────────────────────────────────
 
+/**
+ * Configuration for filtering transaction history.
+ */
 export interface TxFilters {
-  search: string;          // free-text: member address, group name, tx id
+  /** Text search across ID, member, and group names */
+  search: string;
   type: Transaction['type'] | 'all';
   status: Transaction['status'] | 'all';
-  dateFrom: string;        // ISO date string YYYY-MM-DD
+  /** Start date filter (ISO string) */
+  dateFrom: string;
+  /** End date filter (ISO string) */
   dateTo: string;
   groupId: string | 'all';
 }
@@ -41,6 +47,14 @@ export { PAGE_SIZE_OPTIONS };
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Comprehensive hook for managing large transaction history sets.
+ * Provides client-side filtering, sorting by multiple fields, 
+ * and efficient pagination.
+ * 
+ * @param transactions - Full array of raw transaction rows
+ * @returns Filtered/Sorted data and pagination control actions
+ */
 export function useTransactionHistory(transactions: TxRow[]) {
   const [filters, setFilters] = useState<TxFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<TxSort>({ field: 'date', direction: 'desc' });

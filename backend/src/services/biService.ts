@@ -60,6 +60,15 @@ export interface FunnelAnalysis {
 }
 
 export class BIService {
+  /**
+   * Records a business intelligence event to the analytics database.
+   * 
+   * @param eventType - The category of the event (e.g., 'signup', 'payout_executed')
+   * @param userId - Optional ID of the user associated with the event
+   * @param groupId - Optional ID of the group associated with the event
+   * @param eventData - Optional arbitrary structured data for the event
+   * @returns Promise resolving when the event is tracked
+   */
   async trackEvent(eventType: string, userId?: string, groupId?: string, eventData?: any) {
     try {
       await prisma.analyticsEvent.create({
@@ -75,6 +84,13 @@ export class BIService {
     }
   }
 
+  /**
+   * Calculates a comprehensive set of advanced business metrics for a given date range.
+   * Includes user retention, churn, LTV, financial performance, and cohort analysis.
+   * 
+   * @param dateRange - Optional start and end dates for the analysis
+   * @returns Promise resolving to a structured AdvancedMetrics object
+   */
   async calculateAdvancedMetrics(dateRange?: { start: Date; end: Date }): Promise<AdvancedMetrics> {
     const where = dateRange
       ? {
@@ -117,6 +133,12 @@ export class BIService {
     }
   }
 
+  /**
+   * Generates predictive analytics for users and groups using historical data.
+   * Predicts churn probabilities, group success rates, and optimal contribution amounts.
+   * 
+   * @returns Promise resolving to a PredictiveMetrics object
+   */
   async generatePredictiveMetrics(): Promise<PredictiveMetrics> {
     const [churnPrediction, groupSuccessPrediction, optimalContribution] = await Promise.all([
       this.predictUserChurn(),
@@ -131,6 +153,12 @@ export class BIService {
     }
   }
 
+  /**
+   * Analyzes the user journey through predefined funnel stages.
+   * Calculates conversion rates, drop-offs, and average time spent in each stage.
+   * 
+   * @returns Promise resolving to an array of funnel analysis results
+   */
   async analyzeFunnel(): Promise<FunnelAnalysis[]> {
     const funnelStages = [
       'visit',
@@ -153,6 +181,12 @@ export class BIService {
     return funnelData
   }
 
+  /**
+   * Recomputes and updates the persisted metrics for a specific user.
+   * 
+   * @param userId - The unique identifier of the user
+   * @returns Promise resolving when metrics are updated
+   */
   async updateUserMetrics(userId: string) {
     const user = await prisma.user.findUnique({
       where: { walletAddress: userId },
@@ -164,11 +198,11 @@ export class BIService {
 
     if (!user) return
 
-    const totalContributed = user.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    const totalContributed = user.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
     const groupsJoined = user.groups.length
     const lastActiveAt =
       user.contributions.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0]?.createdAt || user.updatedAt
 
     const retentionRate = await this.calculateUserRetentionRate(userId)
@@ -199,6 +233,12 @@ export class BIService {
     })
   }
 
+  /**
+   * Recomputes and updates the persisted metrics for a specific savings group.
+   * 
+   * @param groupId - The unique identifier of the group
+   * @returns Promise resolving when metrics are updated
+   */
   async updateGroupMetrics(groupId: string) {
     const group = await prisma.group.findUnique({
       where: { id: groupId },
@@ -210,9 +250,9 @@ export class BIService {
 
     if (!group) return
 
-    const totalContributions = group.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    const totalContributions = group.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
     const memberCount = group.members.length
-    const completedRounds = Math.max(...group.contributions.map((c) => c.round))
+    const completedRounds = Math.max(...group.contributions.map((c: any) => c.round))
     const successRate = await this.calculateGroupSuccessRate(groupId)
     const defaultRate = await this.calculateGroupDefaultRate(groupId)
     const avgContributionTime = await this.calculateAvgContributionTime(groupId)
@@ -365,7 +405,7 @@ export class BIService {
       },
     })
 
-    const totalContributions = contributions.reduce((sum, c) => sum + Number(c._sum.amount || 0), 0)
+    const totalContributions = contributions.reduce((sum: number, c: any) => sum + Number(c._sum.amount || 0), 0)
     const avgContributionAmount =
       contributions.length > 0 ? totalContributions / contributions.length : 0
 
@@ -411,9 +451,9 @@ export class BIService {
     })
 
     const totalGroups = groups.length
-    const activeGroups = groups.filter((g) => g.isActive).length
+    const activeGroups = groups.filter((g: any) => g.isActive).length
     const avgGroupSize =
-      groups.length > 0 ? groups.reduce((sum, g) => sum + g._count.members, 0) / groups.length : 0
+      groups.length > 0 ? groups.reduce((sum: number, g: any) => sum + g._count.members, 0) / groups.length : 0
 
     const metrics = await prisma.groupMetrics.aggregate({
       where: {
@@ -440,7 +480,7 @@ export class BIService {
       take: limit,
     })
 
-    return cohorts.map((cohort) => ({
+    return cohorts.map((cohort: any) => ({
       cohortDate: cohort.cohortDate,
       cohortSize: cohort.cohortSize,
       retentionRates: [cohort.retentionRate],
@@ -453,7 +493,7 @@ export class BIService {
       take: 100,
     })
 
-    return users.map((user) => ({
+    return users.map((user: any) => ({
       userId: user.userId,
       churnProbability: user.churnScore,
       riskFactors: this.getRiskFactors(user.churnScore),
@@ -466,7 +506,7 @@ export class BIService {
       take: 100,
     })
 
-    return groups.map((group) => ({
+    return groups.map((group: any) => ({
       groupId: group.groupId,
       successProbability: group.successRate,
       riskFactors: this.getRiskFactors(group.riskScore),
@@ -581,7 +621,7 @@ export class BIService {
       (Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     )
     const contributionsInLast30Days = user.contributions.filter(
-      (c) => Date.now() - new Date(c.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
+      (c: any) => Date.now() - new Date(c.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000
     ).length
 
     return daysSinceJoin > 30 ? contributionsInLast30Days / 30 : 1
@@ -600,7 +640,7 @@ export class BIService {
 
     if (!user) return 0
 
-    return user.contributions.reduce((sum, c) => sum + Number(c.amount), 0)
+    return user.contributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0)
   }
 
   private async calculateGroupSuccessRate(groupId: string): Promise<number> {

@@ -22,14 +22,20 @@ export interface Achievement {
   earned: boolean
 }
 
+/**
+ * Performance and participation statistics for an individual member.
+ */
 export interface MemberStats {
-  reliabilityScore: number   // 0–100
+  /** Reliability score (0-100) based on on-time contributions */
+  reliabilityScore: number
   totalContributed: number
+  /** Total number of successful contribution transactions */
   contributions: number
   cyclesCompleted: number
   history: ContributionEntry[]
   achievements: Achievement[]
-  rank: number               // position in group by contributions
+  /** Relative rank in the group by total contribution amount */
+  rank: number
   isCreator: boolean
 }
 
@@ -80,6 +86,14 @@ function buildAchievements(stats: {
   ]
 }
 
+/**
+ * Hook to compute detailed participation stats and gamified achievements 
+ * for a specific member within a group.
+ * 
+ * @param address - Wallet address of the member
+ * @param groupId - Target group contract ID
+ * @returns Calculated member stats and loading state
+ */
 export function useMemberStats(
   address: string,
   groupId: string

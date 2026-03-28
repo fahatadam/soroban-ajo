@@ -21,6 +21,8 @@ import {
   getStellarNetworkFromFreighter,
   waitForFreighterApi,
 } from '@/utils/freighter'
+import { ApiError, backendApiClient } from '@/lib/apiClient'
+import { apiPaths } from '@/lib/apiEndpoints'
 
 const DEFAULT_CONFIG: SessionConfig = {
   sessionDuration: 30 * 60 * 1000,
@@ -29,7 +31,6 @@ const DEFAULT_CONFIG: SessionConfig = {
   checkInterval: 60 * 1000,
   storagePrefix: 'ajo_auth',
 }
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 type AuthTokenResult = AuthTokenResponse | TwoFactorRequiredResponse
 
@@ -168,23 +169,6 @@ class AuthService {
 
   private storageKey(suffix: string): string {
     return `${this.config.storagePrefix}_${suffix}`
-  }
-
-  private buildApiUrl(path: string): string {
-    return `${API_URL}${path}`
-  }
-
-  private async parseJsonResponse<T>(response: Response): Promise<T> {
-    const payload = (await response.json().catch(() => null)) as T | { error?: string } | null
-
-    if (!response.ok) {
-      const errorMessage = payload && typeof payload === 'object' && 'error' in payload && payload.error
-        ? payload.error
-        : 'Authentication request failed'
-      throw new AuthError(errorMessage, 'AUTH_API_ERROR')
-    }
-
-    return payload as T
   }
 
   /**
@@ -327,67 +311,127 @@ class AuthService {
     }
   }
 
+  /**
+   * Requests a backend authentication token using a public key and optional TOTP.
+   * 
+   * @param params - Request parameters
+   * @param params.publicKey - User's Stellar public key
+   * @param params.pendingToken - Optional token if 2FA is required
+   * @param params.totpCode - Optional 2FA code
+   * @returns AuthTokenResponse or TwoFactorRequiredResponse
+   * @throws {AuthError} If the API request fails
+   */
   async requestBackendToken(params: {
     publicKey: string
     pendingToken?: string
     totpCode?: string
   }): Promise<AuthTokenResult> {
-    const response = await fetch(this.buildApiUrl('/api/auth/token'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    })
-
-    if (response.status === 202) {
-      return (await response.json()) as TwoFactorRequiredResponse
+    try {
+      const data = await backendApiClient.request<
+        AuthTokenResponse | TwoFactorRequiredResponse
+      >({
+        path: apiPaths.auth.token,
+        method: 'POST',
+        body: params,
+        auth: 'none',
+      })
+      if ('requiresTwoFactor' in data && data.requiresTwoFactor) {
+        return data as TwoFactorRequiredResponse
+      }
+      return data as AuthTokenResponse
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw new AuthError(String(e.message), 'AUTH_API_ERROR')
+      }
+      throw e
     }
-
-    return this.parseJsonResponse<AuthTokenResponse>(response)
   }
 
+  /**
+   * Get the current 2FA status for a user.
+   * 
+   * @param token - Bearer token for authentication
+   * @returns 2FA status response
+   * @throws {AuthError} If the API request fails
+   */
   async getTwoFactorStatus(token: string): Promise<TwoFactorStatusResponse> {
-    const response = await fetch(this.buildApiUrl('/api/auth/2fa/status'), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
-    return this.parseJsonResponse<TwoFactorStatusResponse>(response)
+    try {
+      return await backendApiClient.request<TwoFactorStatusResponse>({
+        path: apiPaths.auth.twoFactorStatus,
+        bearerToken: token,
+      })
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw new AuthError(String(e.message), 'AUTH_API_ERROR')
+      }
+      throw e
+    }
   }
 
+  /**
+   * Initialize 2FA setup by generating a secret and QR code.
+   * 
+   * @param token - Bearer token for authentication
+   * @returns 2FA setup response (secret, QR)
+   * @throws {AuthError} If the API request fails
+   */
   async setupTwoFactor(token: string): Promise<TwoFactorSetupResponse> {
-    const response = await fetch(this.buildApiUrl('/api/auth/2fa/setup'), {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
-    return this.parseJsonResponse<TwoFactorSetupResponse>(response)
+    try {
+      return await backendApiClient.request<TwoFactorSetupResponse>({
+        path: apiPaths.auth.twoFactorSetup,
+        method: 'POST',
+        bearerToken: token,
+      })
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw new AuthError(String(e.message), 'AUTH_API_ERROR')
+      }
+      throw e
+    }
   }
 
+  /**
+   * Enable 2FA for the account after verification.
+   * 
+   * @param token - Bearer token
+   * @param totpCode - Verification code from authenticator app
+   */
   async enableTwoFactor(token: string, totpCode: string): Promise<{ success: boolean; enabled: boolean }> {
-    const response = await fetch(this.buildApiUrl('/api/auth/2fa/enable'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ totpCode }),
-    })
-
-    return this.parseJsonResponse<{ success: boolean; enabled: boolean }>(response)
+    try {
+      return await backendApiClient.request<{ success: boolean; enabled: boolean }>({
+        path: apiPaths.auth.twoFactorEnable,
+        method: 'POST',
+        bearerToken: token,
+        body: { totpCode },
+      })
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw new AuthError(String(e.message), 'AUTH_API_ERROR')
+      }
+      throw e
+    }
   }
 
+  /**
+   * Disable 2FA for the account.
+   * 
+   * @param token - Bearer token
+   * @param totpCode - Verification code from authenticator app
+   */
   async disableTwoFactor(token: string, totpCode: string): Promise<{ success: boolean; enabled: boolean }> {
-    const response = await fetch(this.buildApiUrl('/api/auth/2fa/disable'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ totpCode }),
-    })
-
-    return this.parseJsonResponse<{ success: boolean; enabled: boolean }>(response)
+    try {
+      return await backendApiClient.request<{ success: boolean; enabled: boolean }>({
+        path: apiPaths.auth.twoFactorDisable,
+        method: 'POST',
+        bearerToken: token,
+        body: { totpCode },
+      })
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw new AuthError(String(e.message), 'AUTH_API_ERROR')
+      }
+      throw e
+    }
   }
 
   /** Encrypts and persists a session to localStorage */

@@ -3,16 +3,29 @@
  * Tracks Core Web Vitals, page load times, component render times, and bundle size.
  */
 
+/**
+ * Core Web Vitals metric data.
+ */
 export interface WebVitalsMetric {
+  /** Metric acronym (LCP, FID, CLS, FCP, TTFB, INP) */
   name: 'LCP' | 'FID' | 'CLS' | 'FCP' | 'TTFB' | 'INP'
+  /** Numeric value of the metric */
   value: number
+  /** Performance classification based on Google's standards */
   rating: 'good' | 'needs-improvement' | 'poor'
+  /** Entry timestamp */
   timestamp: number
 }
 
+/**
+ * Metric for individual component render performance.
+ */
 export interface ComponentRenderMetric {
+  /** Name of the component measured */
   componentName: string
+  /** Duration in milliseconds */
   renderTime: number
+  /** Entry timestamp */
   timestamp: number
 }
 
@@ -73,8 +86,10 @@ function logBudgetViolation(metric: string, value: number, budget: number) {
 }
 
 /**
- * Observe Core Web Vitals using PerformanceObserver.
- * Call once at app startup (e.g. in layout.tsx or providers.tsx).
+ * Observe Core Web Vitals using the PerformanceObserver API.
+ * Reports results to the monitoring backend and optional callback.
+ * 
+ * @param onMetric - Optional callback for Each metric reported
  */
 export function observeWebVitals(onMetric?: (metric: WebVitalsMetric) => void) {
   if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return
@@ -158,7 +173,9 @@ export function observeWebVitals(onMetric?: (metric: WebVitalsMetric) => void) {
 }
 
 /**
- * Measure page load timing from Navigation Timing API.
+ * Measure overall page load timing from the Navigation Timing API.
+ * 
+ * @returns PageLoadMetric or null if unavailable
  */
 export function measurePageLoad(): PageLoadMetric | null {
   if (typeof window === 'undefined') return null
@@ -184,8 +201,11 @@ export function measurePageLoad(): PageLoadMetric | null {
 }
 
 /**
- * Measure a component's render time.
- * Usage: const end = startComponentMeasure('MyComponent'); ... end()
+ * Start measuring a component's render time.
+ * Returns an 'end' function to be called after render completes.
+ * 
+ * @param componentName - Identifier for the component
+ * @returns End function to finalize measurement
  */
 export function startComponentMeasure(componentName: string): () => void {
   const start = performance.now()
@@ -202,7 +222,11 @@ export function startComponentMeasure(componentName: string): () => void {
 }
 
 /**
- * Measure an async operation (e.g. API call).
+ * Measure the execution time of an asynchronous operation (e.g., API call).
+ * 
+ * @param name - Label for the operation
+ * @param fn - The async function to execute
+ * @returns Result of the function
  */
 export async function measureAsync<T>(
   name: string,
@@ -227,8 +251,8 @@ export async function measureAsync<T>(
 }
 
 /**
- * Report a resource timing entry (e.g. script/image load).
- * Useful for bundle size monitoring.
+ * Initialize a PerformanceObserver to monitor resource loads.
+ * Specifically tracks script bundle sizes against defined budgets.
  */
 export function observeResourceTiming() {
   if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return

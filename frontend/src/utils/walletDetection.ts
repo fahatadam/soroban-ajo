@@ -3,10 +3,17 @@
  * Checks for all possible ways wallets might inject themselves
  */
 
+/**
+ * Result of the multi-wallet detection process.
+ */
 export interface WalletDetectionResult {
+  /** True if any version of Freighter is found */
   freighter: boolean;
+  /** True if any version of LOBSTR is found */
   lobstr: boolean;
+  /** True if Albedo is found */
   albedo: boolean;
+  /** Detailed breakdown of found injection points */
   details: {
     freighterApi?: boolean;
     freighter?: boolean;
@@ -18,8 +25,9 @@ export interface WalletDetectionResult {
 }
 
 /**
- * Detects all installed Stellar wallets
- * Checks multiple possible injection points for each wallet
+ * Detect all installed Stellar wallets by checking known injection points.
+ * 
+ * @returns Comprehensive detection result object
  */
 export function detectWallets(): WalletDetectionResult {
   if (typeof window === 'undefined') {
@@ -63,7 +71,12 @@ export function detectWallets(): WalletDetectionResult {
 }
 
 /**
- * Wait for a wallet to be injected (useful for slow-loading extensions)
+ * Poll for a specific wallet to be injected.
+ * Useful for browser extensions that load asynchronously.
+ * 
+ * @param walletName - Key of the wallet to wait for
+ * @param options - Timeout and polling interval settings
+ * @returns Promise resolving to true if found within timeout
  */
 export async function waitForWallet(
   walletName: 'freighter' | 'lobstr' | 'albedo',
@@ -91,7 +104,9 @@ export async function waitForWallet(
 }
 
 /**
- * Get detailed information about what's available in window
+ * Retrieve raw debug information about wallet properties on the window object.
+ * 
+ * @returns Record of found wallet properties and their exported methods
  */
 export function getWindowWalletInfo(): Record<string, any> {
   if (typeof window === 'undefined') return {};
@@ -127,7 +142,8 @@ export function getWindowWalletInfo(): Record<string, any> {
 }
 
 /**
- * Log all wallet detection info to console (for debugging)
+ * Log comprehensive wallet detection info to the console.
+ * Helpful for troubleshooting connection issues on different browsers.
  */
 export function debugWalletDetection(): void {
   if (typeof console === 'undefined') return;

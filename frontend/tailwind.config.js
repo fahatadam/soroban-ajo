@@ -197,7 +197,7 @@ module.exports = {
         'fade-out': 'fadeOut 0.5s ease-in',
         'fade-in-up': 'fadeInUp 0.5s ease-out',
         'slide-in': 'slideIn 0.3s ease-out',
-        'slide-out': 'slideOut 0.3s ease-in',
+        'slide-out': 'slideOut 0.3s ease-out',
         'scale-in': 'scaleIn 0.2s ease-out',
         'scale-out': 'scaleOut 0.2s ease-in',
         shimmer: 'shimmer 2s infinite linear',
@@ -211,6 +211,11 @@ module.exports = {
         lift: 'lift 0.3s ease-out',
         'slide-in-up': 'slideInUp 0.3s ease-out',
         'bounce-in': 'bounceIn 0.5s ease-out',
+        // Sidebar animations
+        'sidebar-in': 'sidebarIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        'sidebar-out': 'sidebarOut 0.25s ease-in',
+        'drawer-up': 'drawerUp 0.35s cubic-bezier(0, 0, 0.2, 1)',
+        'drawer-down': 'drawerDown 0.25s ease-in',
       },
       keyframes: {
         fadeIn: {
@@ -276,6 +281,23 @@ module.exports = {
           '50%': { transform: 'scale(1.05)', opacity: '1' },
           '70%': { transform: 'scale(0.9)' },
           '100%': { transform: 'scale(1)' },
+        },
+        // Sidebar / drawer keyframes
+        sidebarIn: {
+          '0%':   { opacity: '0', transform: 'translateX(-24px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateX(0) scale(1)' },
+        },
+        sidebarOut: {
+          '0%':   { opacity: '1', transform: 'translateX(0) scale(1)' },
+          '100%': { opacity: '0', transform: 'translateX(-24px) scale(0.97)' },
+        },
+        drawerUp: {
+          '0%':   { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        drawerDown: {
+          '0%':   { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(100%)' },
         },
       },
       transitionDuration: {

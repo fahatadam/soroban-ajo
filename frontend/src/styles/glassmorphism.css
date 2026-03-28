@@ -1,0 +1,302 @@
+/**
+ * Glassmorphism Design System
+ *
+ * Frosted-glass card styles for light and dark mode.
+ * Uses CSS custom properties so values adapt automatically
+ * when the .dark class is toggled on <html>.
+ *
+ * Performance notes:
+ * - backdrop-filter is GPU-accelerated on all modern browsers.
+ * - will-change is intentionally omitted; add it only on elements
+ *   that animate (e.g. modals) to avoid unnecessary compositing layers.
+ * - @supports guard ensures solid fallback on browsers without backdrop-filter.
+ */
+
+/* ─── Light-mode tokens ─────────────────────────────────────────────────── */
+:root {
+  --glass-bg:              rgba(255, 255, 255, 0.65);
+  --glass-bg-hover:        rgba(255, 255, 255, 0.78);
+  --glass-bg-strong:       rgba(255, 255, 255, 0.82);
+  --glass-bg-subtle:       rgba(255, 255, 255, 0.45);
+  --glass-border:          rgba(255, 255, 255, 0.55);
+  --glass-border-hover:    rgba(255, 255, 255, 0.75);
+  --glass-shadow:          0 8px 32px rgba(99, 102, 241, 0.08),
+                           0 2px 8px  rgba(0, 0, 0, 0.06);
+  --glass-shadow-hover:    0 16px 48px rgba(99, 102, 241, 0.14),
+                           0 4px 16px rgba(0, 0, 0, 0.08);
+  --glass-shadow-elevated: 0 24px 64px rgba(99, 102, 241, 0.18),
+                           0 8px 24px rgba(0, 0, 0, 0.10);
+  --glass-blur:            16px;
+  --glass-blur-strong:     24px;
+  --glass-blur-subtle:     8px;
+  --glass-text:            rgb(15, 23, 42);       /* surface-900 */
+  --glass-text-muted:      rgb(100, 116, 139);    /* surface-500 */
+  --glass-radius:          1rem;                  /* 16px */
+  --glass-radius-lg:       1.25rem;               /* 20px */
+  --glass-radius-sm:       0.75rem;               /* 12px */
+}
+
+/* ─── Dark-mode tokens ──────────────────────────────────────────────────── */
+.dark {
+  --glass-bg:              rgba(15, 23, 42, 0.60);
+  --glass-bg-hover:        rgba(15, 23, 42, 0.72);
+  --glass-bg-strong:       rgba(15, 23, 42, 0.80);
+  --glass-bg-subtle:       rgba(15, 23, 42, 0.40);
+  --glass-border:          rgba(255, 255, 255, 0.10);
+  --glass-border-hover:    rgba(255, 255, 255, 0.18);
+  --glass-shadow:          0 8px 32px rgba(0, 0, 0, 0.30),
+                           0 2px 8px  rgba(0, 0, 0, 0.20);
+  --glass-shadow-hover:    0 16px 48px rgba(0, 0, 0, 0.40),
+                           0 4px 16px rgba(0, 0, 0, 0.25);
+  --glass-shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.50),
+                           0 8px 24px rgba(0, 0, 0, 0.30);
+  --glass-text:            rgb(248, 250, 252);    /* surface-50 */
+  --glass-text-muted:      rgb(148, 163, 184);    /* surface-400 */
+}
+
+/* ─── Base glass card ───────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  color: var(--glass-text);
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+
+  /* Fallback for browsers without backdrop-filter */
+  background: var(--glass-bg-strong);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  }
+}
+
+/* ─── Hover / interactive variant ──────────────────────────────────────── */
+.glass-card-interactive {
+  cursor: pointer;
+}
+
+.glass-card-interactive:hover,
+.glass-card-interactive:focus-visible {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card-interactive:hover,
+  .glass-card-interactive:focus-visible {
+    background: var(--glass-bg-hover);
+  }
+}
+
+.glass-card-interactive:active {
+  transform: translateY(0);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ─── Elevated variant (modals, popovers) ───────────────────────────────── */
+.glass-card-elevated {
+  --glass-blur: var(--glass-blur-strong);
+  background: var(--glass-bg-strong);
+  box-shadow: var(--glass-shadow-elevated);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card-elevated {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+  }
+}
+
+/* ─── Subtle variant (stat tiles, inline panels) ────────────────────────── */
+.glass-card-subtle {
+  background: var(--glass-bg-subtle);
+  border-color: var(--glass-border);
+  box-shadow: none;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card-subtle {
+    background: var(--glass-bg-subtle);
+    -webkit-backdrop-filter: blur(var(--glass-blur-subtle)) saturate(150%);
+    backdrop-filter: blur(var(--glass-blur-subtle)) saturate(150%);
+  }
+}
+
+/* ─── Gradient-tinted glass (hero banners, feature cards) ───────────────── */
+.glass-card-primary {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.18) 0%,
+    rgba(168, 85, 247, 0.12) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card-primary {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  }
+}
+
+.dark .glass-card-primary {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.22) 0%,
+    rgba(168, 85, 247, 0.16) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.30);
+}
+
+/* ─── Form container glass ──────────────────────────────────────────────── */
+.glass-form {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-lg);
+  box-shadow: var(--glass-shadow-elevated);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-form {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+  }
+}
+
+/* ─── Glass input fields ────────────────────────────────────────────────── */
+.glass-input {
+  background: rgba(255, 255, 255, 0.50);
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  border-radius: 0.5rem;
+  color: var(--glass-text);
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.70);
+  border-color: rgba(99, 102, 241, 0.60);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+.dark .glass-input {
+  background: rgba(15, 23, 42, 0.50);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--glass-text);
+}
+
+.dark .glass-input:focus {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.20);
+}
+
+/* ─── Glass modal overlay ───────────────────────────────────────────────── */
+.glass-modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.glass-modal {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-lg);
+  box-shadow: var(--glass-shadow-elevated);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-modal {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(200%);
+  }
+}
+
+/* ─── Shimmer skeleton on glass ─────────────────────────────────────────── */
+.glass-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.10) 25%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.10) 75%
+  );
+  background-size: 200% 100%;
+  animation: glass-shimmer 1.8s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+.dark .glass-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes glass-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Reduced-motion: disable blur animation, keep static glass ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .glass-card-interactive,
+  .glass-card-elevated,
+  .glass-card-subtle,
+  .glass-card-primary,
+  .glass-form,
+  .glass-modal {
+    transition: none;
+    transform: none !important;
+  }
+
+  .glass-skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* ─── High-contrast: replace glass with solid backgrounds ───────────────── */
+@media (prefers-contrast: high) {
+  .glass-card,
+  .glass-card-interactive,
+  .glass-card-elevated,
+  .glass-card-subtle,
+  .glass-card-primary,
+  .glass-form,
+  .glass-modal {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .dark .glass-card,
+  .dark .glass-card-interactive,
+  .dark .glass-card-elevated,
+  .dark .glass-card-subtle,
+  .dark .glass-card-primary,
+  .dark .glass-form,
+  .dark .glass-modal {
+    background: #000000 !important;
+    border: 2px solid #ffffff !important;
+  }
+}

@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { asyncHandler } from '../middleware/errorHandler'
 import { AppError } from '../errors/AppError'
+import { GoalRepository } from '../repositories/GoalRepository'
+import { prisma } from '../config/database'
 
-const prisma = new PrismaClient()
+const goalRepo = new GoalRepository(prisma)
 
 const serializeBigInt = (data: unknown) =>
   JSON.parse(JSON.stringify(data, (_, v) => (typeof v === 'bigint' ? v.toString() : v)))
@@ -15,17 +16,15 @@ export class GoalsController {
 
     const { title, description, targetAmount, deadline, category, isPublic } = req.body
 
-    const goal = await prisma.goal.create({
-      data: {
-        title,
-        description,
-        targetAmount: BigInt(targetAmount),
-        deadline: new Date(deadline),
-        category,
-        isPublic: isPublic ?? false,
-        userId,
-        currentAmount: BigInt(0),
-      },
+    const goal = await goalRepo.create({
+      title,
+      description,
+      targetAmount: BigInt(targetAmount),
+      deadline: new Date(deadline),
+      category,
+      isPublic: isPublic ?? false,
+      userId,
+      currentAmount: BigInt(0),
     })
 
     res.status(201).json({ success: true, data: serializeBigInt(goal) })
@@ -35,17 +34,14 @@ export class GoalsController {
     const userId = (req as any).user?.publicKey || req.query.userId
     if (!userId) throw new AppError('User ID is required', 'UNAUTHORIZED', 401)
 
-    const goals = await prisma.goal.findMany({
-      where: { userId: String(userId) },
-      orderBy: { createdAt: 'desc' },
-    })
+    const goals = await goalRepo.findByUser(String(userId))
 
     res.status(200).json({ success: true, data: serializeBigInt(goals) })
   })
 
   getGoal = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    const goal = await prisma.goal.findUnique({ where: { id }, include: { members: true } })
+    const goal = await goalRepo.findWithMembers(id)
 
     if (!goal) throw new AppError('Goal not found', 'NOT_FOUND', 404)
 
@@ -56,17 +52,14 @@ export class GoalsController {
     const { id } = req.params
     const { title, description, targetAmount, deadline, category, isPublic, status } = req.body
 
-    const goal = await prisma.goal.update({
-      where: { id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(targetAmount !== undefined && { targetAmount: BigInt(targetAmount) }),
-        ...(deadline !== undefined && { deadline: new Date(deadline) }),
-        ...(category !== undefined && { category }),
-        ...(isPublic !== undefined && { isPublic }),
-        ...(status !== undefined && { status }),
-      },
+    const goal = await goalRepo.update(id, {
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(targetAmount !== undefined && { targetAmount: BigInt(targetAmount) }),
+      ...(deadline !== undefined && { deadline: new Date(deadline) }),
+      ...(category !== undefined && { category }),
+      ...(isPublic !== undefined && { isPublic }),
+      ...(status !== undefined && { status }),
     })
 
     res.status(200).json({ success: true, data: serializeBigInt(goal) })
@@ -74,7 +67,7 @@ export class GoalsController {
 
   deleteGoal = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params
-    await prisma.goal.delete({ where: { id } })
+    await goalRepo.delete(id)
     res.status(200).json({ success: true, message: 'Goal deleted successfully' })
   })
 

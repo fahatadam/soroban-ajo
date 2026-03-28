@@ -24,6 +24,13 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   return prototype === Object.prototype || prototype === null
 }
 
+/**
+ * Normalizes an error object into a serializable JSON representation.
+ * Extracts stack trace and custom metadata (e.g., statusCode, code).
+ * 
+ * @param error - The error instance to serialize
+ * @returns A plain object containing sanitized error details
+ */
 export const serializeError = (error: unknown): Record<string, unknown> => {
   if (error instanceof Error) {
     const errorWithContext = error as Error & {

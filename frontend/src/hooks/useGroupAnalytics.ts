@@ -4,12 +4,16 @@ import { useMemo } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Performance snapshot for a specific savings group.
+ */
 export interface GroupPerformance {
   id: string;
   name: string;
   totalContributed: number;
   totalPayouts: number;
   memberCount: number;
+  /** Percentage of members who have completed all due contributions */
   completionRate: number; // 0-100
   isActive: boolean;
 }
@@ -84,6 +88,13 @@ function seedMemberStats(): MemberStat[] {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Hook for generating advanced analytics trends and summaries across multiple groups.
+ * Provides contribution distributions, membership growth, and top contributor rankings.
+ * 
+ * @param groups - Raw group performance data
+ * @returns Summary stats, contribution trends, and member stats
+ */
 export function useGroupAnalytics(groups: GroupPerformance[] = []) {
   const summary = useMemo<AnalyticsSummary>(() => {
     const totalContributions = groups.reduce((s, g) => s + g.totalContributed, 0);

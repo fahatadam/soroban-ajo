@@ -860,3 +860,49 @@ pub fn get_group_token_balance(
     let key = (symbol_short!("GTBAL"), group_id, cycle, token);
     env.storage().persistent().get(&key).unwrap_or(0)
 }
+
+// ── Dispute storage ───────────────────────────────────────────────────────
+
+/// Returns the next dispute ID and increments the counter.
+pub fn get_next_dispute_id(env: &Env) -> u64 {
+    let key = symbol_short!("DCOUNTER");
+    let id: u64 = env.storage().instance().get(&key).unwrap_or(0);
+    env.storage().instance().set(&key, &(id + 1));
+    id
+}
+
+/// Stores a dispute.
+pub fn store_dispute(env: &Env, id: u64, dispute: &crate::types::Dispute) {
+    let key = (symbol_short!("DISPUTE"), id);
+    env.storage().persistent().set(&key, dispute);
+}
+
+/// Retrieves a dispute by ID.
+pub fn get_dispute(env: &Env, id: u64) -> Option<crate::types::Dispute> {
+    let key = (symbol_short!("DISPUTE"), id);
+    env.storage().persistent().get(&key)
+}
+
+/// Records that a voter has voted on a dispute.
+pub fn store_dispute_vote(env: &Env, dispute_id: u64, voter: &Address, vote: &crate::types::DisputeVote) {
+    let key = (symbol_short!("DISPVOTE"), dispute_id, voter);
+    env.storage().persistent().set(&key, vote);
+}
+
+/// Returns `true` if the voter has already voted on this dispute.
+pub fn has_voted_on_dispute(env: &Env, dispute_id: u64, voter: &Address) -> bool {
+    let key = (symbol_short!("DISPVOTE"), dispute_id, voter);
+    env.storage().persistent().has(&key)
+}
+
+/// Stores the list of dispute IDs for a group.
+pub fn store_group_dispute_ids(env: &Env, group_id: u64, ids: &Vec<u64>) {
+    let key = (symbol_short!("DISPGIDS"), group_id);
+    env.storage().persistent().set(&key, ids);
+}
+
+/// Retrieves the list of dispute IDs for a group.
+pub fn get_group_dispute_ids(env: &Env, group_id: u64) -> Vec<u64> {
+    let key = (symbol_short!("DISPGIDS"), group_id);
+    env.storage().persistent().get(&key).unwrap_or_else(|| Vec::new(env))
+}

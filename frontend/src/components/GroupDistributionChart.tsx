@@ -1,3 +1,9 @@
+/**
+ * @file GroupDistributionChart.tsx
+ * @description Pie chart visualization for analyzing contribution distribution across groups.
+ * Helps users visualize their portfolio allocation in different savings pools.
+ */
+
 'use client';
 
 import {
@@ -10,12 +16,21 @@ import {
 } from 'recharts';
 import { GroupDistribution } from '@/hooks/useDashboardAnalytics';
 
+/**
+ * Props for the GroupDistributionChart component.
+ */
 interface GroupDistributionChartProps {
+  /** Array of objects representing group names and their respective contribution values */
   data: GroupDistribution[];
 }
 
+/** Default color palette for chart segments */
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+/**
+ * A responsive pie chart that displays the relative financial footprint of each group.
+ * Includes interactive tooltips and an automated percentage-labeling system.
+ */
 export default function GroupDistributionChart({
   data,
 }: GroupDistributionChartProps) {

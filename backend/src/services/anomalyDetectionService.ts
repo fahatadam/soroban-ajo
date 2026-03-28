@@ -80,11 +80,23 @@ export class AnomalyDetectionService {
     })
   }
 
+  /**
+   * Dynamically adds or updates a metric configuration for anomaly detection.
+   * 
+   * @param config - The configuration defining thresholds, windows, and sensitivity
+   * @returns Promise resolving when the configuration is added
+   */
   async addMetricConfig(config: AnomalyConfig) {
     this.configs.set(config.metric, config)
     logger.info('Anomaly detection config added', { metric: config.metric })
   }
 
+  /**
+   * Executes the anomaly detection routine across all configured metrics.
+   * Significant anomalies (high/critical severity) are automatically persisted to the database.
+   * 
+   * @returns Promise resolving to a list of detected anomaly alerts
+   */
   async detectAnomalies(): Promise<AnomalyAlert[]> {
     const alerts: AnomalyAlert[] = []
 
@@ -107,6 +119,14 @@ export class AnomalyDetectionService {
     return alerts
   }
 
+  /**
+   * Analyzes a specific metric for standard statistical anomalies and trend shifts.
+   * 
+   * @param metric - Name of the metric to analyze
+   * @param config - Detection parameters for the metric
+   * @returns Promise resolving to detected alerts for this specific metric
+   * @internal
+   */
   private async analyzeMetric(metric: string, config: AnomalyConfig): Promise<AnomalyAlert[]> {
     const data = await this.getMetricData(metric, config.windowSize)
 
@@ -139,6 +159,14 @@ export class AnomalyDetectionService {
     return alerts
   }
 
+  /**
+   * Factory method that retrieves the raw data points for a specific metric over a time window.
+   * 
+   * @param metric - Metric identifier
+   * @param windowSizeMinutes - How many minutes of data to retrieve
+   * @returns Promise resolving to an array of metric data points
+   * @internal
+   */
   private async getMetricData(metric: string, windowSizeMinutes: number): Promise<MetricData[]> {
     const startTime = new Date(Date.now() - windowSizeMinutes * 60 * 1000)
 
@@ -271,6 +299,16 @@ export class AnomalyDetectionService {
     return this.groupDataByInterval(events, 'timestamp', 5, 'eventData.value')
   }
 
+  /**
+   * Generic helper to group raw event logs into time-series data points with specified intervals.
+   * 
+   * @param data - Array of raw data objects
+   * @param timestampField - The object key containing the timestamp
+   * @param intervalMinutes - Size of the aggregation buckets in minutes
+   * @param valueField - Optional path to the value to sum; if omitted, 1 is used per event
+   * @returns Aggregated and sorted time-series data
+   * @internal
+   */
   private groupDataByInterval(
     data: any[],
     timestampField: string,
@@ -301,6 +339,13 @@ export class AnomalyDetectionService {
     return path.split('.').reduce((current, key) => current?.[key], obj) || 0
   }
 
+  /**
+   * Calculates key statistical parameters (mean, standard deviation, median) for a dataset.
+   * 
+   * @param data - Array of metric data points
+   * @returns Object containing calculated statistics
+   * @internal
+   */
   private calculateStatistics(data: MetricData[]): {
     mean: number
     standardDeviation: number
@@ -331,6 +376,17 @@ export class AnomalyDetectionService {
     }
   }
 
+  /**
+   * Generates a formal AnomalyAlert object when an unusual data point is detected.
+   * 
+   * @param metric - The metric that deviated
+   * @param latestData - The offending data point
+   * @param stats - Historical statistical context
+   * @param deviation - Calculated deviation value
+   * @param config - Original detection configuration
+   * @returns A structured alert object
+   * @internal
+   */
   private createAlert(
     metric: string,
     latestData: MetricData,
@@ -356,6 +412,15 @@ export class AnomalyDetectionService {
     }
   }
 
+  /**
+   * Uses linear regression to detect significant trends (upward or downward) that may indicate an anomaly.
+   * 
+   * @param metric - Metric to analyze
+   * @param data - Historical data points
+   * @param config - Detection params
+   * @returns A trend alert if a significant slope is detected, otherwise null
+   * @internal
+   */
   private detectTrendAnomaly(
     metric: string,
     data: MetricData[],
@@ -389,6 +454,13 @@ export class AnomalyDetectionService {
     return null
   }
 
+  /**
+   * Performs linear regression on the provided data to find the rate of change (slope).
+   * 
+   * @param data - Time-series data points
+   * @returns The calculated slope and correlation coefficient
+   * @internal
+   */
   private calculateTrend(data: MetricData[]): { slope: number; correlation: number } {
     const n = data.length
     const x = data.map((_, i) => i)
@@ -520,6 +592,13 @@ export class AnomalyDetectionService {
     return recommendations
   }
 
+  /**
+   * Persists a significant anomaly alert to the analytics events database and logs a warning.
+   * 
+   * @param alert - The anomaly alert to store
+   * @returns Promise resolving when the alert is saved
+   * @internal
+   */
   private async storeAnomaly(alert: AnomalyAlert) {
     await prismaAny.analyticsEvent.create({
       data: {
@@ -532,6 +611,12 @@ export class AnomalyDetectionService {
     logger.warn('Anomaly detected', { alert })
   }
 
+  /**
+   * Retrieves anomaly alerts recorded within a recent time window.
+   * 
+   * @param hours - The lookback window in hours (default: 24)
+   * @returns Promise resolving to a list of historical anomalies
+   */
   async getRecentAnomalies(hours: number = 24): Promise<AnomalyAlert[]> {
     const startTime = new Date(Date.now() - hours * 60 * 60 * 1000)
 
@@ -550,6 +635,11 @@ export class AnomalyDetectionService {
     return events.map((event: any) => event.eventData as unknown as AnomalyAlert)
   }
 
+  /**
+   * Generates a high-level summary of anomaly activity over the last 24 hours.
+   * 
+   * @returns Promise resolving to anomaly summary counts and breakdowns
+   */
   async getAnomalySummary(): Promise<{
     totalAnomalies: number
     criticalAnomalies: number

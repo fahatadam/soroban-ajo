@@ -1,11 +1,16 @@
 import { Worker } from 'bullmq'
-import { redisConnection, QUEUE_NAMES } from '../queues/queueManager'
+import { redisConnection } from '../queues/queueManager'
+import { QUEUE_NAMES } from '../queues'
 import { processSyncJob } from './syncJob'
 import { processReminderJob } from './reminderJob'
 import { processAnalyticsJob } from './analyticsJob'
 import { processEmailJob } from './emailJob'
 import { processPayoutJob } from './payoutJob'
 import { logger } from '../utils/logger'
+
+// Queue names for reminder and analytics (not yet in dedicated queue files)
+const REMINDER_QUEUE_NAME = 'reminder'
+const ANALYTICS_QUEUE_NAME = 'analytics'
 
 const workers: Worker[] = []
 
@@ -44,11 +49,11 @@ export function startWorkers(): void {
     logger.info('Starting job workers...')
 
     workers.push(
-        createWorker(QUEUE_NAMES.SYNC, processSyncJob),
-        createWorker(QUEUE_NAMES.REMINDERS, processReminderJob),
-        createWorker(QUEUE_NAMES.ANALYTICS, processAnalyticsJob),
-        createWorker(QUEUE_NAMES.EMAIL, processEmailJob, 3), // higher concurrency for emails
-        createWorker(QUEUE_NAMES.PAYOUTS, processPayoutJob)
+        createWorker(QUEUE_NAMES.SYNC, processSyncJob as unknown as (job: any) => Promise<void>),
+        createWorker(REMINDER_QUEUE_NAME, processReminderJob as unknown as (job: any) => Promise<void>),
+        createWorker(ANALYTICS_QUEUE_NAME, processAnalyticsJob as unknown as (job: any) => Promise<void>),
+        createWorker(QUEUE_NAMES.EMAIL, processEmailJob as unknown as (job: any) => Promise<void>, 3),
+        createWorker(QUEUE_NAMES.PAYOUT, processPayoutJob as unknown as (job: any) => Promise<void>)
     )
 
     logger.info(`Started ${workers.length} job workers`)

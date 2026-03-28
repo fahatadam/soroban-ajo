@@ -14,21 +14,28 @@ export const prefersReducedMotion = (): boolean => {
 };
 
 /**
- * Common transition configurations
+ * Common transition configurations for Framer Motion.
  */
 export const transitions = {
+  /** Fast transition (150ms) */
   fast: { duration: 0.15 },
+  /** Base transition (200ms) */
   base: { duration: 0.2 },
+  /** Moderate transition (300ms) */
   moderate: { duration: 0.3 },
+  /** Slow transition (500ms) */
   slow: { duration: 0.5 },
 };
 
 /**
- * Common spring configurations
+ * Common spring configurations for physical-feeling animations.
  */
 export const springs = {
+  /** Gentle spring for subtle movements */
   gentle: { type: 'spring', stiffness: 300, damping: 30 },
+  /** Bouncy spring for playful elements */
   bouncy: { type: 'spring', stiffness: 400, damping: 25 },
+  /** Soft spring for larger elements */
   soft: { type: 'spring', stiffness: 200, damping: 25 },
 };
 
@@ -205,7 +212,12 @@ export const bounceInVariants: Variants = {
 };
 
 /**
- * Get animation props based on reduced motion preference
+ * Get animation props based on reduced motion preference.
+ * Disables animations if the user prefers reduced motion.
+ * 
+ * @param reducedMotion - User's reduced motion preference
+ * @param variants - Optional variants to apply if motion is enabled
+ * @returns Animation configuration object
  */
 export const getAnimationProps = (
   reducedMotion: boolean,

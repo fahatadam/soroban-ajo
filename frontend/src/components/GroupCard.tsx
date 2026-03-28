@@ -1,23 +1,45 @@
-// Issue #22: Create group card component
-// Complexity: Trivial (100 pts)
-// Status: Enhanced with premium styling, gradients, and animations
-// TASK: Issue #62 Added Skeleton Loading State
+/**
+ * @file GroupCard.tsx
+ * @description A premium card component for displaying a summary of a savings group.
+ * Supports multiple visual variants, status-based styling, and a skeleton loading state.
+ */
 
 import React from 'react'
 
+/**
+ * Props for the GroupCard component.
+ */
 interface GroupCardProps {
+  /** Unique identifier for the group */
   groupId?: string
+  /** Human-readable name of the group */
   groupName?: string
+  /** Current number of members who have joined */
   memberCount?: number
+  /** Maximum capacity of the group */
   maxMembers?: number
+  /** Formatted date or description of the next payout event */
   nextPayout?: string
+  /** Cumulative contribution amount for the current user or group */
   totalContributions?: number
+  /** Current operational state of the group */
   status?: 'active' | 'completed' | 'paused'
+  /** Visual layout and interaction style */
   variant?: 'default' | 'elevated' | 'outlined' | 'interactive' | 'compact' | 'spacious'
+  /** Optional click handler for navigation or selection */
   onClick?: () => void
+  /** If true, renders a placeholder skeleton instead of content */
   isLoading?: boolean
 }
 
+/**
+ * A versatile card component that represents a savings group with rich visual feedback.
+ * Features:
+ * - Dynamic color coding based on group status
+ * - Member capacity progress bar
+ * - Integrated skeleton loading state for async data fetching
+ * - Accessibility support for interactive modes
+ */
 export const GroupCard: React.FC<GroupCardProps> = ({
   groupName = '',
   memberCount = 0,
@@ -51,12 +73,12 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   }
 
   const cardVariants = {
-    default: 'card-default',
-    elevated: 'card-elevated',
-    outlined: 'card-outlined',
-    interactive: 'card-interactive',
-    compact: 'card-compact',
-    spacious: 'card-spacious',
+    default: 'glass-card p-5',
+    elevated: 'glass-card glass-card-elevated p-6',
+    outlined: 'glass-card border-2 p-5',
+    interactive: 'glass-card glass-card-interactive p-5',
+    compact: 'glass-card glass-card-interactive p-4',
+    spacious: 'glass-card glass-card-elevated p-8',
   }
 
   const cardClass = cardVariants[variant]
@@ -68,9 +90,9 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   // --- SKELETON LOADING STATE ---
   if (isLoading) {
     return (
-      <div className={`${cardClass} pointer-events-none relative overflow-hidden`}>
+      <div className={`${cardClass} pointer-events-none relative overflow-hidden`} aria-busy="true" aria-label="Loading group">
         {/* Top Accent Bar Skeleton */}
-        <div className="absolute top-0 left-0 right-0 h-1 skeleton" />
+        <div className="absolute top-0 left-0 right-0 h-1 glass-skeleton" />
 
         {/* Header Skeleton */}
         <div className={`flex justify-between items-start ${isCompact ? 'mb-3' : 'mb-5'} pt-1`}>
@@ -83,27 +105,22 @@ export const GroupCard: React.FC<GroupCardProps> = ({
         {/* Body Skeleton */}
         <div className={`${isCompact ? 'space-y-3' : 'space-y-4'}`}>
           <div className="flex justify-between items-center">
-            <div className="skeleton h-3.5 w-14 rounded" />
-            <div className="skeleton h-3.5 w-10 rounded" />
+            <div className="glass-skeleton h-3.5 w-14 rounded" />
+            <div className="glass-skeleton h-3.5 w-10 rounded" />
           </div>
-
-          <div className="progress-bar">
-            <div className="skeleton h-full w-full rounded-full" />
-          </div>
-
+          <div className="h-2 rounded-full glass-skeleton" />
           <div className="flex justify-between items-center">
-            <div className="skeleton h-3.5 w-24 rounded" />
-            <div className="skeleton h-3.5 w-16 rounded" />
+            <div className="glass-skeleton h-3.5 w-24 rounded" />
+            <div className="glass-skeleton h-3.5 w-16 rounded" />
           </div>
-
           <div className="flex justify-between items-center">
-            <div className="skeleton h-3.5 w-20 rounded" />
-            <div className="skeleton h-3.5 w-24 rounded" />
+            <div className="glass-skeleton h-3.5 w-20 rounded" />
+            <div className="glass-skeleton h-3.5 w-24 rounded" />
           </div>
         </div>
 
         {/* Button Skeleton */}
-        <div className={`skeleton w-full rounded-xl ${isCompact ? 'mt-4 h-9' : 'mt-5 h-10'}`} />
+        <div className={`glass-skeleton w-full rounded-xl ${isCompact ? 'mt-4 h-9' : 'mt-5 h-10'}`} />
       </div>
     )
   }

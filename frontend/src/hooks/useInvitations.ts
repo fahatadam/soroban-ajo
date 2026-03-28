@@ -21,6 +21,12 @@ interface InvitationsState {
   getInvitedMembers: (groupId: string) => string[];
 }
 
+/**
+ * Zustand store hook for managing group invitations.
+ * Tracks both received invitations and invitations sent by the current user.
+ * 
+ * @returns Object with invitation state and methods to add, update, and track invites
+ */
 export const useInvitations = create<InvitationsState>()(
   persist(
     (set, get) => ({

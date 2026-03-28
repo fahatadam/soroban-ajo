@@ -13,6 +13,12 @@ interface TemplateState {
   incrementUsage: (id: string) => void;
 }
 
+/**
+ * Zustand store hook for managing group creation templates.
+ * Provides access to predefined templates and allows users to create custom ones.
+ * 
+ * @returns Object with template state and methods for CRUD and usage tracking
+ */
 export const useTemplates = create<TemplateState>()(
   persist(
     (set, get) => ({

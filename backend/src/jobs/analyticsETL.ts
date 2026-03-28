@@ -60,23 +60,19 @@ async function processHourlyETL(jobId: string): Promise<void> {
   })
 
   // Group events by user and update user metrics
-  const userEvents = recentEvents.filter((e) => e.userId)
-  const uniqueUsers = [...new Set(userEvents.map((e) => e.userId).filter(Boolean))]
+  const userEvents = recentEvents.filter((e: any) => e.userId)
+  const uniqueUsers = Array.from(new Set<string>(userEvents.map((e: any) => e.userId as string).filter((id: string) => !!id)))
 
   for (const userId of uniqueUsers) {
-    if (userId) {
-      await biService.updateUserMetrics(userId)
-    }
+    await biService.updateUserMetrics(userId)
   }
 
   // Group events by group and update group metrics
-  const groupEvents = recentEvents.filter((e) => e.groupId)
-  const uniqueGroups = [...new Set(groupEvents.map((e) => e.groupId).filter(Boolean))]
+  const groupEvents = recentEvents.filter((e: any) => e.groupId)
+  const uniqueGroups = Array.from(new Set<string>(groupEvents.map((e: any) => e.groupId as string).filter((id: string) => !!id)))
 
   for (const groupId of uniqueGroups) {
-    if (groupId) {
-      await biService.updateGroupMetrics(groupId)
-    }
+    await biService.updateGroupMetrics(groupId)
   }
 
   // Clean up old events (keep last 30 days)
@@ -157,7 +153,7 @@ async function processCohortAnalysis(jobId: string): Promise<void> {
   // Group users by week of signup
   const cohorts = new Map<string, string[]>()
 
-  users.forEach((user) => {
+  users.forEach((user: any) => {
     const cohortDate = new Date(user.createdAt)
     cohortDate.setHours(0, 0, 0, 0)
     cohortDate.setDate(cohortDate.getDate() - cohortDate.getDay()) // Start of week
@@ -275,7 +271,8 @@ async function processMetricsUpdate(jobId: string): Promise<void> {
 
 // Enqueue all ETL job types — called on startup to ensure initial data is populated
 export async function scheduleETLJobs() {
-  const { analyticsQueue } = await import('../queues/queueManager')
+  const { createQueue, getQueue } = await import('../queues/queueManager')
+  const analyticsQueue = getQueue('analytics') || createQueue('analytics')
 
   logger.info('Enqueuing initial ETL jobs')
 

@@ -1,5 +1,6 @@
-// User-friendly error message mapper — no technical jargon
-
+/**
+ * Categories of errors for UI-specific styling and icon selection.
+ */
 export type ErrorCategory =
   | 'wallet'
   | 'transaction'
@@ -8,10 +9,17 @@ export type ErrorCategory =
   | 'auth'
   | 'unknown'
 
+/**
+ * Structure for user-friendly error messages.
+ */
 export interface UserFriendlyError {
+  /** Error title for display */
   title: string
+  /** Detailed, non-technical explanation */
   message: string
+  /** Error classification */
   category: ErrorCategory
+  /** Whether the user should be prompted to retry */
   retryable: boolean
 }
 
@@ -91,6 +99,12 @@ const ERROR_MAP: Record<string, UserFriendlyError> = {
   },
 }
 
+/**
+ * Map raw errors or error codes to user-friendly messages.
+ * 
+ * @param error - The error object or code to map
+ * @returns UserFriendlyError object containing UI-ready strings
+ */
 export function getErrorMessage(error: unknown): UserFriendlyError {
   if (typeof error === 'string') {
     return ERROR_MAP[error] ?? getDefaultError(error)

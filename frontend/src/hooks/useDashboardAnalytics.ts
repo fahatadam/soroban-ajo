@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
 
+/**
+ * Aggregated metrics for the user's overall dashboard.
+ */
 export interface DashboardMetrics {
   totalSavings: number;
   totalContributions: number;
@@ -7,6 +10,7 @@ export interface DashboardMetrics {
   expectedPayouts: number;
   activeGroups: number;
   completedGroups: number;
+  /** Average monthly savings rate based on total contributions */
   savingsRate: number;
 }
 
@@ -29,15 +33,26 @@ export interface SavingsGrowth {
   payouts: number;
 }
 
+/**
+ * AI-driven or heuristic insight for the user's financial health.
+ */
 export interface Insight {
   id: string;
   type: 'reminder' | 'goal' | 'recommendation' | 'warning';
   title: string;
   description: string;
+  /** Optional CTA label for the insight */
   action?: string;
   priority: 'high' | 'medium' | 'low';
 }
 
+/**
+ * Hook to process raw group data into high-level dashboard analytics and insights.
+ * Calculates savings growth, contribution distribution, and active alerts.
+ * 
+ * @param groups - Array of raw group objects from the blockchain
+ * @returns Comprehensive analytics dashboard data structure
+ */
 export const useDashboardAnalytics = (groups: any[] = []) => {
   const metrics = useMemo<DashboardMetrics>(() => {
     // Mock calculations - replace with real data

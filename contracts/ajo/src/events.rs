@@ -241,3 +241,26 @@ pub fn emit_multi_token_payout(
     let topics = (symbol_short!("mtpay"), group_id, cycle);
     env.events().publish(topics, (recipient, token, amount));
 }
+
+/// Emit an event when a dispute is filed
+pub fn emit_dispute_filed(env: &Env, dispute_id: u64, group_id: u64, complainant: &Address, defendant: &Address) {
+    let topics = (symbol_short!("disfiled"), dispute_id);
+    env.events().publish(topics, (group_id, complainant, defendant));
+}
+
+/// Emit an event when a vote is cast on a dispute
+pub fn emit_dispute_vote(env: &Env, dispute_id: u64, voter: &Address, supports_action: bool) {
+    let topics = (symbol_short!("disvote"), dispute_id);
+    env.events().publish(topics, (voter, supports_action));
+}
+
+/// Emit an event when a dispute is resolved
+pub fn emit_dispute_resolved(
+    env: &Env,
+    dispute_id: u64,
+    group_id: u64,
+    resolution: crate::types::DisputeResolution,
+) {
+    let topics = (symbol_short!("disres"), dispute_id);
+    env.events().publish(topics, (group_id, resolution));
+}

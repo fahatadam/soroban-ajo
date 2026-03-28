@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
 
+/**
+ * Hook to trap keyboard focus within a specific DOM container.
+ * Useful for ensuring accessibility in modals, dialogs, and drawers.
+ * 
+ * @param isActive - Whether the focus trap should be currently active
+ * @returns React ref to be attached to the container element
+ */
 export function useFocusTrap(isActive: boolean = true) {
   const containerRef = useRef<HTMLElement>(null);
 

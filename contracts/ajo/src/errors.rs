@@ -157,7 +157,25 @@ pub enum AjoError {
 
     /// Group does not have multi-token configuration.
     NotMultiTokenGroup = 50,
+
     /// No notification preferences found for this member.
-    PreferencesNotFound = 48,
+    PreferencesNotFound = 51,
+
+    // ── Dispute errors ────────────────────────────────────────────────────
+
+    /// The specified dispute was not found in storage.
+    DisputeNotFound = 52,
+
+    /// The dispute has already been resolved.
+    DisputeAlreadyResolved = 53,
+
+    /// This address has already voted on this dispute.
+    AlreadyVotedOnDispute = 54,
+
+    /// The voting period for this dispute has ended.
+    VotingPeriodEndedDispute = 55,
+
+    /// The caller is not a member of the dispute's group.
+    NotDisputeMember = 56,
 }
 

@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/**
+ * Raw data required to create a new notification.
+ */
 export interface NotificationPayload {
   id: string
   type:
@@ -17,6 +20,7 @@ export interface NotificationPayload {
   message: string
   timestamp: number
   groupId?: string
+  /** URI to redirect the user to when they interact with the notification */
   actionUrl?: string
   metadata?: Record<string, unknown>
 }
@@ -67,6 +71,16 @@ const defaultPreferences: NotificationPreferences = {
   announcements: true,
 }
 
+/**
+ * Primary state management hook for in-app and browser notifications.
+ * Uses Zustand with persistent storage to track unread alerts and user preferences.
+ * 
+ * Includes methods for:
+ * - Adding/Deleting notifications
+ * - Marking as read
+ * - Managing push service worker subscriptions
+ * - Requesting browser notification permissions
+ */
 export const useNotifications = create<NotificationState>()(
   persist(
     (set, get) => ({

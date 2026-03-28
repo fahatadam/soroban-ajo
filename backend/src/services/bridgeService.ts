@@ -19,6 +19,13 @@ export class BridgeService {
   // In-memory queue for demonstration - replace with DB or persistent job queue
   private history: any[] = []
 
+  /**
+   * Initiates a cross-chain token bridge request.
+   * In production, this would interact with bridge smart contracts and relayers.
+   * 
+   * @param req - The bridge request details
+   * @returns Promise resolving to the initiated bridge record
+   */
   async initiateBridge(req: BridgeRequest) {
     // Validate chains and amount
     // Reserve tokens or lock via on-chain contract interaction
@@ -30,15 +37,35 @@ export class BridgeService {
     return record
   }
 
+  /**
+   * Retrieves the current status of a specific bridge request.
+   * 
+   * @param id - The unique ID of the bridge request
+   * @returns Promise resolving to the bridge record or null if not found
+   */
   async getStatus(id: string) {
     return this.history.find((h) => h.id === id) || null
   }
 
+  /**
+   * Retrieves the recent history of bridge requests.
+   * 
+   * @param limit - Maximum number of records to return (default: 50)
+   * @returns Promise resolving to an array of bridge records
+   */
   async listHistory(limit = 50) {
     return this.history.slice(0, limit)
   }
 
   // Called by relayer/webhook when bridge completes or fails
+  /**
+   * Handles callbacks from cross-chain relayers to update the status of a bridge request.
+   * 
+   * @param id - The ID of the bridge request
+   * @param payload - The completion or failure details from the relayer
+   * @returns Promise resolving to the updated bridge record
+   * @throws {Error} If the bridge record is not found
+   */
   async handleCallback(id: string, payload: { success: boolean; txHash?: string; message?: string }) {
     const rec = this.history.find((h) => h.id === id)
     if (!rec) throw new Error('Not found')

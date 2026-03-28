@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Search, UserX, UserCheck, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { nextApiClient } from '@/lib/apiClient';
+import { apiPaths } from '@/lib/apiEndpoints';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -19,16 +21,19 @@ export default function UsersPage() {
 
   const fetchUsers = () => {
     setLoading(true);
-    const token = localStorage.getItem('adminToken');
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (debouncedSearch) params.set('search', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
 
-    fetch(`/api/admin/users?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(d => { setUsers(d.users); setTotal(d.total); })
+    nextApiClient
+      .request<{ users: any[]; total: number }>({
+        path: apiPaths.admin.users(params.toString()),
+        auth: 'admin',
+      })
+      .then(d => {
+        setUsers(d.users);
+        setTotal(d.total);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -41,22 +46,27 @@ export default function UsersPage() {
 
   const handleAction = async () => {
     if (!actionModal) return;
-    const token = localStorage.getItem('adminToken');
     const { type, user } = actionModal;
 
-    const endpoints: any = {
-      suspend: `/api/admin/users/${user.id}/suspend`,
-      ban: `/api/admin/users/${user.id}/ban`,
-      delete: `/api/admin/users/${user.id}`,
-      reinstate: `/api/admin/users/${user.id}/reinstate`,
+    const endpoints: Record<string, string> = {
+      suspend: apiPaths.admin.userSuspend(user.id),
+      ban: apiPaths.admin.userBan(user.id),
+      delete: apiPaths.admin.userDelete(user.id),
+      reinstate: apiPaths.admin.userReinstate(user.id),
     };
 
-    const methods: any = { suspend: 'POST', ban: 'POST', delete: 'DELETE', reinstate: 'POST' };
+    const methods: Record<string, string> = {
+      suspend: 'POST',
+      ban: 'POST',
+      delete: 'DELETE',
+      reinstate: 'POST',
+    };
 
-    await fetch(endpoints[type], {
+    await nextApiClient.request({
+      path: endpoints[type],
       method: methods[type],
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ reason: actionReason }),
+      body: { reason: actionReason },
+      auth: 'admin',
     });
 
     setActionModal(null);

@@ -1,13 +1,30 @@
+/**
+ * @file GroupsGrid.tsx
+ * @description A responsive grid component for displaying multiple savings groups.
+ * Handles staggered animations for entry and provides a skeleton loading state.
+ */
+
 import React from 'react'
 import { Group } from '@/types'
 import { GroupCard } from './GroupCard'
 
+/**
+ * Props for the GroupsGrid component.
+ */
 interface GroupsGridProps {
+  /** Array of group objects to be rendered as cards */
   groups?: Group[]
+  /** If true, renders a set of skeleton cards */
   isLoading?: boolean
+  /** Callback fired when a specific group card is clicked */
   onGroupClick?: (groupId: string) => void
 }
 
+/**
+ * A responsive grid that displays GroupCard components.
+ * Automatically handles empty states (via the length check in parent) 
+ * and provides a professional loading experience with staggered skeletons.
+ */
 export const GroupsGrid: React.FC<GroupsGridProps> = ({
   groups,
   isLoading = false,
