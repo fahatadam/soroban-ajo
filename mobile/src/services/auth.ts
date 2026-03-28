@@ -5,7 +5,6 @@
  * a manual public key entry flow, then sign a challenge via the backend.
  */
 import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
 import { generateAuthToken, saveToken, clearToken } from './api';
 import type { AuthSession, WalletProvider, StellarNetwork } from '../types';
 
@@ -47,10 +46,4 @@ export async function loadSession(): Promise<AuthSession | null> {
 export async function clearSession(): Promise<void> {
   await SecureStore.deleteItemAsync(SESSION_KEY);
   await clearToken();
-}
-
-/** Generate a random nonce for wallet challenge */
-export async function generateNonce(): Promise<string> {
-  const bytes = await Crypto.getRandomBytesAsync(32);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -23,7 +23,7 @@ export default function Dashboard() {
     filterStatus, setFilterStatus,
     searchQuery, setSearchQuery,
     currentPage, setCurrentPage,
-    totalPages, groups, totalGroups,
+    totalPages, groups,
     isLoading, stats, userAddress,
   } = useDashboard(address || undefined)
 

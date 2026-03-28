@@ -56,7 +56,7 @@ export class DataExportService {
         data: { status: 'processing' },
       })
 
-      let data: any = {}
+      const data: any = {}
       let filePath: string
       let fileSize: number
 

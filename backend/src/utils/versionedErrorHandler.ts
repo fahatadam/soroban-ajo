@@ -98,7 +98,7 @@ export function sendVersionedError(
  * Creates a version-aware error handler middleware
  */
 export function createVersionedErrorHandler() {
-  return (err: StandardError | Error, req: any, res: Response, next: any) => {
+  return (err: StandardError | Error, req: any, res: Response, _next: any) => {
     const version = (req as any)?.apiVersion || CURRENT_VERSION
     const requestId = req.id || generateRequestId()
     const statusCode = (err as StandardError).status || 500
@@ -163,7 +163,7 @@ export function enrichErrorWithVersionInfo(
 ): VersionedErrorResponse {
   if (version === 'v2' && 'code' in error) {
     // Add version-specific info to v2 errors
-    ;(error as V2ErrorResponse).details = {
+    (error as V2ErrorResponse).details = {
       ...(error as V2ErrorResponse).details,
       apiVersion: version,
       migrateToVersion: CURRENT_VERSION,

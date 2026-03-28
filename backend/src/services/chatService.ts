@@ -47,7 +47,7 @@ class ChatService {
           return next(new Error('User not found'))
         }
 
-        ;(socket.data as SocketData) = { userId, walletAddress }
+        (socket.data as SocketData) = { userId, walletAddress }
         next()
       } catch (error) {
         logger.error('Socket authentication error:', error)

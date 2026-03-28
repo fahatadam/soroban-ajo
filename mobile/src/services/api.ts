@@ -26,10 +26,6 @@ export async function clearToken() {
   await SecureStore.deleteItemAsync(SESSION_KEY);
 }
 
-export async function getToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(SESSION_KEY);
-}
-
 // Auth
 export async function generateAuthToken(publicKey: string): Promise<string> {
   const { data } = await client.post<{ token: string }>('/auth/token', { publicKey });

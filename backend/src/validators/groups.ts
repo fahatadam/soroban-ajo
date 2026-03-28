@@ -48,14 +48,12 @@ export const createGroupSchema = z.object({
     .int('Max members must be an integer')
     .min(2, 'Max members must be at least 2')
     .max(100, 'Max members cannot exceed 100'),
-    currentMembers: z
+  currentMembers: z
     .number()
     .int('Current members must be an integer')
     .min(0, 'Current members cannot be negative')
     .max(100, 'Current members cannot exceed 100'),
-    // .optional(),
   adminPublicKey: stellarPublicKeySchema,
-  // signedXdr: z.string().optional(), // For phase 2 of group creation
   description: z.string().max(500, 'Description must be 500 characters or less'),
 })
 

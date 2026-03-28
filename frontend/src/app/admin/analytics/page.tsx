@@ -6,8 +6,6 @@ import { Button } from '@/components/Button'
 import { nextApiClient } from '@/lib/apiClient'
 import { apiPaths } from '@/lib/apiEndpoints'
 import { 
-  LineChart, 
-  Line, 
   AreaChart, 
   Area, 
   BarChart, 
@@ -19,7 +17,6 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
   ResponsiveContainer 
 } from 'recharts'
 

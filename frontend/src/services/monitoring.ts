@@ -28,7 +28,6 @@ class MonitoringService {
       console.info('[Monitoring] Monitoring disabled — set NEXT_PUBLIC_SENTRY_DSN to enable')
       return
     }
-    // Sentry.init({ dsn: this.dsn, tracesSampleRate: 1.0 })
     console.info('[Monitoring] Monitoring initialized')
   }
 
@@ -39,21 +38,18 @@ class MonitoringService {
    * @param event - The error event details
    */
   captureError({ error, context, severity = 'medium', userId }: MonitoringEvent) {
-    if (this.enabled) {
-      // Sentry.withScope((scope) => {
-      //   scope.setLevel(severity)
-      //   if (userId) scope.setUser({ id: userId })
-      //   if (context) scope.setExtras(context)
-      //   Sentry.captureException(error)
-      // })
+    const enhancedContext = {
+      ...context,
+      userId,
     }
+
     // Always log to analytics
     try {
       const { analytics } = require('./analytics')
-      analytics.trackError(error, { ...context, severity }, severity)
+      analytics.trackError(error, { ...enhancedContext, severity }, severity)
     } catch {}
 
-    console.error(`[Monitoring] ${severity.toUpperCase()}:`, error.message, context)
+    console.error(`[Monitoring] ${severity.toUpperCase()}:`, error.message, enhancedContext)
   }
 
   /**
@@ -63,9 +59,6 @@ class MonitoringService {
    * @param severity - Message severity level
    */
   captureMessage(message: string, severity: MonitoringEvent['severity'] = 'low') {
-    if (this.enabled) {
-      // Sentry.captureMessage(message, severity)
-    }
     console.info(`[Monitoring] ${message}`)
   }
 
@@ -75,20 +68,12 @@ class MonitoringService {
    * @param userId - User's unique identifier
    * @param email - User's email address (optional)
    */
-  setUser(userId: string, email?: string) {
-    if (this.enabled) {
-      // Sentry.setUser({ id: userId, email })
-    }
-  }
+  setUser(_userId: string, _email?: string) {}
 
   /**
    * Clear the current user context.
    */
-  clearUser() {
-    if (this.enabled) {
-      // Sentry.setUser(null)
-    }
-  }
+  clearUser() {}
 }
 
 export const monitoring = new MonitoringService()

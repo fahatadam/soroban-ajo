@@ -53,7 +53,7 @@ export class ApiClient {
     const parseAs = config.parseAs ?? 'json'
     const url = resolveUrl(this.baseURL, config.path)
 
-    let headers = new Headers(config.headers ?? {})
+    const headers = new Headers(config.headers ?? {})
     if (
       config.body !== undefined &&
       config.body !== null &&
@@ -62,7 +62,7 @@ export class ApiClient {
       headers.set('Content-Type', 'application/json')
     }
 
-    let init: RequestInit = {
+    const init: RequestInit = {
       method,
       headers,
       body:

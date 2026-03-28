@@ -1,7 +1,3 @@
-// Issue #32: Implement error boundary and error handling
-// Complexity: High (200 pts)
-// Status: Enhanced with recovery strategies and logging
-
 import React from 'react'
 import { analytics } from '../services/analytics'
 import { monitoring } from '../services/monitoring'

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Response } from 'express'
 import { prisma } from '../config/database'
 import { chatService } from '../services/chatService'
 import { logger } from '../utils/logger'

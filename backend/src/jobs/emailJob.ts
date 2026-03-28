@@ -66,7 +66,7 @@ export async function processEmailJob(job: Job<EmailJobData>): Promise<{
     await job.updateProgress(30)
     
     // Apply template if specified (simplified implementation)
-    let emailBody = body
+    const emailBody = body
     if (template) {
       // In a real implementation, you would use a templating engine like Handlebars or EJS
       logger.debug(`Applying template: ${template}`)

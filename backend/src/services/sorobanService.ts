@@ -1,7 +1,6 @@
 import * as StellarSdk from 'stellar-sdk'
 import { createModuleLogger } from '../utils/logger'
 import { ErrorReporter } from '../utils/errorReporter'
-import * as Sentry from '@sentry/node'
 
 const logger = createModuleLogger('SorobanService')
 
