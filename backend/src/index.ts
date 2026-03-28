@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
 import { logger } from './utils/logger'
 import { groupsRouter } from './routes/groups'
+import { transactionsRouter } from './routes/transactions'
 import { healthRouter } from './routes/health'
 import { webhooksRouter } from './routes/webhooks'
 import { authRouter } from './routes/auth'
@@ -57,6 +58,7 @@ setupSwagger(app)
 app.use('/health', healthRouter)
 app.use('/api/auth', strictLimiter, authRouter)
 app.use('/api/groups', groupsRouter)
+app.use('/api/transactions', transactionsRouter)
 app.use('/api/webhooks', strictLimiter, webhooksRouter)
 app.use('/jobs', jobsRouter)
 
